@@ -1,1 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Noticia+Text:ital,wght@0,400;0,700;1,400;1,700&family=Sora:wght@100..800&display=swap');
 @import "tailwindcss";
+
+.noticia {
+  font-family: "Noticia Text", serif;
+}

@@ -1,0 +1,90 @@
+import { useState } from "react";
+
+const Navbar = () => {
+	const [isOpen, setIsOpen] = useState(false);
+
+	const toggleMenu = () => setIsOpen(!isOpen);
+
+	return (
+		<nav className="bg-stone-100 noticia shadow-md">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="flex justify-between h-16 items-center">
+					{/* Logo */}
+					<div className="flex items-center space-x-2 flex-shrink-0">
+						<img
+							src="https://i.postimg.cc/fy4csVxj/image.png"
+							alt="DailyNews Logo"
+							className="h-12 w-12 object-contain"
+						/>
+						<h1  className="text-2xl font-bold text-gray-800">
+							DailyNews
+						</h1>
+					</div>
+
+					{/* Desktop Menu */}
+					<div className="hidden md:flex space-x-6 items-center">
+						{[
+							"Home",
+							"World",
+							"Politics",
+							"Sports",
+							"Entertainment",
+							"Opinion",
+						].map((item) => (
+							<a
+								key={item}
+								href="#"
+								className="text-gray-700 hover:text-blue-600"
+							>
+								{item}
+							</a>
+						))}
+					</div>
+
+					{/* Search & Mobile Toggle */}
+					<div className="flex items-center space-x-4">
+						<button
+							className="text-gray-600 hover:text-blue-600 text-xl"
+							aria-label="Search"
+						>
+							🔍
+						</button>
+
+						{/* Hamburger */}
+						<button
+							className="md:hidden text-gray-700 focus:outline-none text-2xl"
+							onClick={toggleMenu}
+							aria-label="Toggle menu"
+						>
+							☰
+						</button>
+					</div>
+				</div>
+			</div>
+
+			{/* Mobile Menu */}
+			{isOpen && (
+				<div className="md:hidden px-4 pb-4 space-y-2">
+					{[
+						"Home",
+						"World",
+						"Politics",
+						"Sports",
+						"Entertainment",
+						"Opinion",
+					].map((item) => (
+						<a
+							key={item}
+							href="#"
+							className="block text-gray-700 hover:text-blue-600"
+						>
+							{item}
+						</a>
+					))}
+				</div>
+			)}
+		</nav>
+	);
+};
+
+export default Navbar;
