@@ -1,22 +1,96 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import { useForm } from "react-hook-form";
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa";
 import Lottie from "lottie-react";
 import loginAnimation from "../../assets/loginAnimation.json"; 
+import { AuthContext } from "../../Context/AuthContext";
+import { Bounce, toast } from "react-toastify";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Login = () => {
 	const [showPassword, setShowPassword] = useState(false);
-
+    const { signIn, signInWithGoogle } = use(AuthContext);
+    const location = useLocation();
+		const navigate = useNavigate();
 	const {
 		register,
 		handleSubmit,
 		formState: { errors },
 	} = useForm();
 
-	const onSubmit = (data) => {
-		console.log("Login Data:", data);
-		// Handle login logic here
-	};
+    const onSubmit = (data) => {
+			const { email, password } = data;
+
+			signIn(email, password)
+				.then((result) => {
+					console.log("User logged in:", result.user);
+
+					toast.success("Login successful!", {
+						position: "top-right",
+						autoClose: 2000,
+						hideProgressBar: false,
+						closeOnClick: true,
+						pauseOnHover: true,
+						draggable: true,
+						theme: "light",
+						transition: Bounce,
+					});
+
+					// Delay navigation a bit so toast shows properly
+					setTimeout(() => {
+						navigate(location.state?.from || "/");
+					}, 500);
+				})
+				.catch((error) => {
+					console.error("Login failed:", error.message);
+					toast.error(`Login failed: ${error.message}`, {
+						position: "top-right",
+						autoClose: 3000,
+						hideProgressBar: false,
+						closeOnClick: true,
+						pauseOnHover: true,
+						draggable: true,
+						theme: "light",
+						transition: Bounce,
+					});
+				});
+		};
+      
+
+        const handleGoogleSignIn =  () => {
+            signInWithGoogle()
+							.then((result) => {
+								console.log("Google sign-in successful:", result.user);
+
+								toast.success("Logged in with Google successfully!", {
+									position: "top-right",
+									autoClose: 2000,
+									hideProgressBar: false,
+									closeOnClick: true,
+									pauseOnHover: true,
+									draggable: true,
+									theme: "light",
+									transition: Bounce,
+								});
+
+								setTimeout(() => {
+									navigate(location.state?.from || "/");
+								}, 500);
+							})
+							.catch((error) => {
+								console.error("Google sign-in failed:", error.message);
+								toast.error(`Google sign-in failed: ${error.message}`, {
+									position: "top-right",
+									autoClose: 3000,
+									hideProgressBar: false,
+									closeOnClick: true,
+									pauseOnHover: true,
+									draggable: true,
+									theme: "light",
+									transition: Bounce,
+								});
+							});
+				};
 
 	return (
 		<div className="min-h-screen bg-stone-200 flex items-center justify-center p-6 noticia">
@@ -96,6 +170,16 @@ const Login = () => {
 							Sign In
 						</button>
 
+						<button
+							type="button"
+							onClick={handleGoogleSignIn 
+							}
+							className="w-full flex items-center justify-center gap-3 border border-stone-300 rounded-lg py-3 text-stone-700 font-medium hover:border-stone-500 hover:bg-stone-100 transition duration-200"
+						>
+							<FaGoogle className="text-red-500 text-lg" />
+							<span>Sign in with Google</span>
+						</button>
+
 						{/* Forgot Password Link */}
 						<p className="text-center text-sm text-stone-600 pt-4">
 							Don't have an account?{" "}
@@ -105,7 +189,7 @@ const Login = () => {
 							>
 								Register
 							</a>
-						</p>    
+						</p>
 					</form>
 				</div>
 
