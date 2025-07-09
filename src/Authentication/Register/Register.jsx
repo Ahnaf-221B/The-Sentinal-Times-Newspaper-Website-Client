@@ -14,9 +14,11 @@ import registerAnimation from "../../assets/registerAnimation.json";
 import { AuthContext } from "../../Context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Bounce, toast } from "react-toastify";
+import useAxios from "../../hooks/useAxios";
 
 const Register = () => {
 	const [showPassword, setShowPassword] = useState(false);
+	const [profilePic, setProfilePic] = useState();
     const { createUser, signInWithGoogle } = use(AuthContext);
     const location = useLocation();
 		const navigate = useNavigate();
@@ -26,14 +28,23 @@ const Register = () => {
 		
 		formState: { errors },
 	} = useForm();
-
-	const onSubmit = (data) => {
-		const { fullName, email, password, photoURL } = data;
+const axiosInstance  = useAxios()
+	const onSubmit =  (data) => {
+		const { fullName, email, password, profileImage } = data;
 
 		createUser(email, password)
-			.then((result) => {
+			.then(async(result) => {
 				console.log("User registered:", result.user);
-
+				const userInfo = {
+					email: data.email,
+					photoURL: profilePic,
+					fullName: data.fullName,
+					role: "user",
+					created_at: new Date().toISOString(),
+					last_logged_in: new Date().toISOString(),
+				};
+				const userRes = await axiosInstance.post("/users", userInfo);
+				console.log(userRes.data);
 				toast.success("User registered successfully!", {
 					position: "top-right",
 					autoClose: 2000,
@@ -66,11 +77,20 @@ const Register = () => {
 	};
     
 
-    const handleGoogleRegister =  () => {
+    const handleGoogleRegister =  (data) => {
         signInWithGoogle()
-					.then((result) => {
+					.then(async (result) => {
 						console.log("Google sign-in successful:", result.user);
-
+						const userInfo = {
+							email: data.email,
+							photoURL: profilePic,
+							fullName: data.fullName,
+							role: "user",
+							created_at: new Date().toISOString(),
+							last_logged_in: new Date().toISOString(),
+						};
+						const userRes = await axiosInstance.post("/users", userInfo);
+						console.log(userRes.data);
 						toast.success("Logged in with Google successfully!", {
 							position: "top-right",
 							autoClose: 2000,
@@ -101,7 +121,19 @@ const Register = () => {
 					});
 		};
 	
-	
+		const handleUploadImage = async (e) => {
+			const image = e.target.files[0];
+			console.log(image);
+
+			const formData = new FormData();
+			formData.append("image", image);
+
+			const imageUploadUrl = `https://api.imgbb.com/1/upload?key=${
+				import.meta.env.VITE_image_upload_key
+			}`;
+			const res = await axiosInstance.post(imageUploadUrl, formData);
+			setProfilePic(res.data.data.url);
+		};
 
 	return (
 		<div className="min-h-screen bg-stone-200 flex items-center justify-center p-6 noticia">
@@ -210,9 +242,8 @@ const Register = () => {
 								<input
 									type="file"
 									accept="image/*"
-									{...register("profileImage", {
-										required: "Profile image is required",
-									})}
+									onChange={handleUploadImage}
+									
 									className="w-full pl-10 pr-4 py-2 file:bg-stone-200 file:border-none file:rounded file:px-3 file:py-1 file:cursor-pointer border rounded bg-stone-50 border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-400"
 								/>
 								{errors.profileImage && (

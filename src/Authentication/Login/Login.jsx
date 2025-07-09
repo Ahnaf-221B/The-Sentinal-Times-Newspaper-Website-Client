@@ -6,12 +6,14 @@ import loginAnimation from "../../assets/loginAnimation.json";
 import { AuthContext } from "../../Context/AuthContext";
 import { Bounce, toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
+import useAxios from "../../hooks/useAxios";
 
 const Login = () => {
 	const [showPassword, setShowPassword] = useState(false);
     const { signIn, signInWithGoogle } = use(AuthContext);
     const location = useLocation();
 		const navigate = useNavigate();
+		const axiosInstance = useAxios()
 	const {
 		register,
 		handleSubmit,
@@ -22,9 +24,18 @@ const Login = () => {
 			const { email, password } = data;
 
 			signIn(email, password)
-				.then((result) => {
+				.then(async(result) => {
 					console.log("User logged in:", result.user);
-
+					const userInfo = {
+						email: data.email,
+						photoURL: profilePic,
+						fullName: data.fullName,
+						role: "user",
+						created_at: new Date().toISOString(),
+						last_logged_in: new Date().toISOString(),
+					};
+					const userRes = await axiosInstance.post("/users", userInfo);
+					console.log(userRes.data);
 					toast.success("Login successful!", {
 						position: "top-right",
 						autoClose: 2000,

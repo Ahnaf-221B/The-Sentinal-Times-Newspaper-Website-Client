@@ -1,13 +1,34 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useContext, useState } from "react";
+import { Link, NavLink } from "react-router-dom";
+import { AuthContext } from "../../Context/AuthContext";
 
 const Navbar = () => {
 	const [isOpen, setIsOpen] = useState(false);
+	const { user, logOut } = useContext(AuthContext);
 
 	const toggleMenu = () => setIsOpen(!isOpen);
 
+	const handleLogout = async () => {
+		try {
+			await logOut();
+			console.log("User logged out");
+		} catch (err) {
+			console.error("Logout error:", err.message);
+		}
+	};
+
+	// Navigation items with their corresponding routes
+	const navItems = [
+		{ name: "Home", path: "/" },
+		{ name: "World", path: "/world" },
+		{ name: "Politics", path: "/politics" },
+		{ name: "Sports", path: "/sports" },
+		{ name: "Entertainment", path: "/entertainment" },
+		{ name: "Opinion", path: "/opinion" },
+	];
+
 	return (
-		<nav className="bg-stone-100 shadow-md noticia">
+		<nav className="bg-white shadow-lg">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6">
 				<div className="flex justify-between h-16 items-center">
 					{/* Logo */}
@@ -22,40 +43,57 @@ const Navbar = () => {
 
 					{/* Desktop Menu */}
 					<div className="hidden md:flex space-x-6 items-center">
-						{[
-							"Home",
-							"World",
-							"Politics",
-							"Sports",
-							"Entertainment",
-							"Opinion",
-						].map((item) => (
-							<a
-								key={item}
-								href="#"
-								className="text-gray-700 hover:text-blue-600"
+						{navItems.map((item) => (
+							<NavLink
+								key={item.name}
+								to={item.path}
+								className={({ isActive }) =>
+									`px-3 py-2 text-sm font-medium ${
+										isActive
+											? "text-blue-600 border-b-2 border-blue-600"
+											: "text-gray-700 hover:text-blue-600 hover:border-b-2 hover:border-blue-300"
+									}`
+								}
 							>
-								{item}
-							</a>
+								{item.name}
+							</NavLink>
 						))}
 					</div>
 
-					{/* Login/Register & Hamburger */}
+					{/* Auth Buttons */}
 					<div className="flex items-center space-x-4">
-						<Link
-							to="/login"
-							className="text-gray-700 font-medium hover:text-blue-600"
-						>
-							Login
-						</Link>
-						<Link
-							to="/register"
-							className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
-						>
-							Register
-						</Link>
+						{user ? (
+							<>
+								<img
+									src={user.photoURL || "https://i.ibb.co/4pDNDk1/avatar.png"}
+									alt="profile"
+									className="h-10 w-10 rounded-full border border-gray-400"
+								/>
+								<button
+									onClick={handleLogout}
+									className="text-white text-lg hover:underline bg-red-600 h-10 w-20 rounded-xl"
+								>
+									Logout
+								</button>
+							</>
+						) : (
+							<>
+								<Link
+									to="/login"
+									className="text-gray-700 font-medium hover:text-blue-600"
+								>
+									Login
+								</Link>
+								<Link
+									to="/register"
+									className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
+								>
+									Register
+								</Link>
+							</>
+						)}
 
-						{/* Hamburger (Mobile) */}
+						{/* Hamburger */}
 						<button
 							className="md:hidden text-gray-700 focus:outline-none text-2xl"
 							onClick={toggleMenu}
@@ -69,38 +107,74 @@ const Navbar = () => {
 
 			{/* Mobile Menu */}
 			{isOpen && (
-				<div className="md:hidden px-4 pb-4 space-y-2">
-					{[
-						"Home",
-						"World",
-						"Politics",
-						"Sports",
-						"Entertainment",
-						"Opinion",
-					].map((item) => (
-						<a
-							key={item}
-							href="#"
-							className="block text-gray-700 hover:text-blue-600"
+				<div className="md:hidden px-4 pb-4 space-y-2 bg-white shadow-md">
+					{navItems.map((item) => (
+						<NavLink
+							key={item.name}
+							to={item.path}
+							className={({ isActive }) =>
+								`block px-3 py-2 ${
+									isActive
+										? "text-blue-600 font-medium"
+										: "text-gray-700 hover:text-blue-600"
+								}`
+							}
+							onClick={toggleMenu}
 						>
-							{item}
-						</a>
+							{item.name}
+						</NavLink>
 					))}
 
-					{/* Mobile Login/Register */}
 					<div className="pt-4 border-t border-gray-300">
-						<Link
-							to="/login"
-							className="block text-gray-700 hover:text-blue-600 mb-2"
-						>
-							Login
-						</Link>
-						<Link
-							to="/register"
-							className="inline-block bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
-						>
-							Register
-						</Link>
+						{user ? (
+							<div className="flex items-center justify-between">
+								<div className="flex items-center space-x-2">
+									<img
+										src={user.photoURL || "https://i.ibb.co/4pDNDk1/avatar.png"}
+										alt="profile"
+										className="h-10 w-10 rounded-full border border-gray-400"
+									/>
+									<span className="text-gray-700 text-sm font-medium">
+										{user.displayName || "User"}
+									</span>
+								</div>
+								<button
+									onClick={handleLogout}
+									className="text-red-600 text-sm font-medium hover:underline"
+								>
+									Logout
+								</button>
+							</div>
+						) : (
+							<>
+								<NavLink
+									to="/login"
+									className={({ isActive }) =>
+										`block px-3 py-2 mb-2 ${
+											isActive
+												? "text-blue-600 font-medium"
+												: "text-gray-700 hover:text-blue-600"
+										}`
+									}
+									onClick={toggleMenu}
+								>
+									Login
+								</NavLink>
+								<NavLink
+									to="/register"
+									className={({ isActive }) =>
+										`inline-block px-3 py-1 rounded text-sm ${
+											isActive
+												? "bg-blue-700 text-white"
+												: "bg-blue-600 text-white hover:bg-blue-700"
+										}`
+									}
+									onClick={toggleMenu}
+								>
+									Register
+								</NavLink>
+							</>
+						)}
 					</div>
 				</div>
 			)}
