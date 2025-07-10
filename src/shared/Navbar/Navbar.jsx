@@ -22,8 +22,9 @@ const Navbar = () => {
 		{ name: "Home", path: "/" },
 		{ name: "Add Article", path: "/add-article" },
 		{ name: "All Articles", path: "/all-articles" },
-		{ name: "Sports", path: "/sports" },
-		{ name: "Entertainment", path: "/entertainment" },
+		{ name: "Premium Article", path: "/premium-article" },
+		{name : "Subscription", path: "/subscription"},
+		{ name: "My Article", path: "/my-article" },
 		{ name: "Dashboard", path: "/dashboard" },
 	];
 
@@ -48,7 +49,7 @@ const Navbar = () => {
 								key={item.name}
 								to={item.path}
 								className={({ isActive }) =>
-									`px-3 py-2 text-sm font-medium ${
+									`px-1 py-2 text-sm font-medium ${
 										isActive
 											? "text-blue-600 border-b-2 border-blue-600"
 											: "text-gray-700 hover:text-blue-600 hover:border-b-2 hover:border-blue-300"

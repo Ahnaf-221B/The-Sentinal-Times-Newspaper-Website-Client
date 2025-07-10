@@ -48,15 +48,18 @@ const AllArticlesPage = () => {
 	};
 
 	// Make Article Premium
-	const makePremiumArticle = (id) => {
+  const makePremiumArticle = (id) => {
 		axiosInstance
 			.put(`/articles/${id}/make-premium`)
 			.then((response) => {
+				// Update the local articles list to reflect the premium status change
 				setArticles(
 					articles.map((article) =>
-						article._id === id ? response.data : article
+						article._id === id ? { ...article, isPremium: true } : article
 					)
 				);
+				// Redirect to Premium Articles page
+				window.location.href = "/premium-article"; // Navigate to the Premium Articles page
 			})
 			.catch((error) => console.error("Error making article premium:", error));
 	};

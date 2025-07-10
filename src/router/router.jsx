@@ -11,6 +11,11 @@ import AllArticle from "../pages/Dashboard/AllArticle/AllArticle";
 import AllUsers from "../pages/Dashboard/AllUsers/AllUsers";
 import AddArticle from "../pages/AddArticle/AddArticle";
 import UserAllArticle from "../pages/UserAllArticle/UserAllArticle";
+import ArticleDetails from "../pages/ArticleDetails/ArticleDetails";
+import PremiumArticle from "../pages/PremiumArticle/PremiumArticle";
+import MyArticle from "../pages/MyArticle/MyArticle";
+import PaymentForm from "../pages/Payment/PaymentForm";
+import MakePayment from "../pages/Payment/MakePayment";
 
 export const router  = createBrowserRouter([
     {
@@ -40,8 +45,27 @@ export const router  = createBrowserRouter([
            {
             path:'/all-articles',
             element: <UserAllArticle></UserAllArticle>
+           },
+           {
+            path: '/article-details/:id',
+            element : <ArticleDetails></ArticleDetails>
+           },
+           {
+            path:'/premium-article',
+            element: <PremiumArticle></PremiumArticle>
+           },
+           {
+            path:'/my-article',
+            element: <MyArticle></MyArticle>
+           },
+           {
+            path:'/subscription',
+           element: <PaymentForm></PaymentForm>
+           },
+           {
+            path: '/make-payment',
+            element: <Payment></Payment>
            }
-
         ]
     },
     {

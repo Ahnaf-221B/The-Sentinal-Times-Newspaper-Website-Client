@@ -155,12 +155,12 @@ const UserAllArticle = () => {
 							</button>
 							{/* Disable button if article is premium and user is not subscribed */}
 							<button
-								disabled={article.isPremium && !user.isSubscribed}
-								className={`${
-									article.isPremium && !user.isSubscribed
-										? "bg-gray-400 cursor-not-allowed"
-										: "bg-green-500"
-								} text-white py-2 px-4 rounded-lg hover:bg-green-600`}
+								// disabled={article.isPremium && !user.isSubscribed}
+								// className={`${
+								// 	article.isPremium && !user.isSubscribed
+								// 		? "bg-gray-400 cursor-not-allowed"
+								// 		: "bg-green-500"
+								// } text-white py-2 px-4 rounded-lg hover:bg-green-600`}
 							>
 								{article.isPremium ? "Premium" : "Read"}
 							</button>
