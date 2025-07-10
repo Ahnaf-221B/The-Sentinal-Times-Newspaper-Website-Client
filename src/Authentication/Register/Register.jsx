@@ -1,5 +1,5 @@
 import { use, useState } from "react";
-import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 import {
 	FaEnvelope,
 	FaLock,
@@ -7,133 +7,144 @@ import {
 	FaEye,
 	FaEyeSlash,
 	FaImage,
-    FaGoogle,
+	FaGoogle,
 } from "react-icons/fa";
 import Lottie from "lottie-react";
 import registerAnimation from "../../assets/registerAnimation.json";
-import { AuthContext } from "../../Context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Bounce, toast } from "react-toastify";
+import { Bounce } from "react-toastify";
 import useAxios from "../../hooks/useAxios";
+import { AuthContext } from "../../Context/AuthContext"; // Context for authentication
+import { useForm } from "react-hook-form";
 
 const Register = () => {
 	const [showPassword, setShowPassword] = useState(false);
-	const [profilePic, setProfilePic] = useState();
-    const { createUser, signInWithGoogle } = use(AuthContext);
-    const location = useLocation();
-		const navigate = useNavigate();
+	const [profilePic, setProfilePic] = useState(null);
+	const { createUser, signInWithGoogle, user } = use(AuthContext);
+	const location = useLocation();
+	const navigate = useNavigate();
+	const axiosInstance = useAxios();
+
 	const {
 		register,
 		handleSubmit,
-		
 		formState: { errors },
 	} = useForm();
-const axiosInstance  = useAxios()
-	const onSubmit =  (data) => {
+
+	// Handle Google login and register user
+	const handleGoogleRegister = async () => {
+		try {
+			// Google sign-in
+			const result = await signInWithGoogle();
+			const { email, displayName, photoURL } = result.user;
+
+			// Create user info object
+			const userInfo = {
+				email,
+				fullName: displayName,
+				photoURL:
+					photoURL || "https://placehold.co/40x40/cccccc/ffffff?text=User", // Fallback image
+				role: "user",
+				created_at: new Date().toISOString(),
+				last_logged_in: new Date().toISOString(),
+			};
+
+			// Send user info to backend
+			const userRes = await axiosInstance.post("/users", userInfo);
+			toast.success("Logged in with Google successfully!", {
+				position: "top-right",
+				autoClose: 2000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				theme: "light",
+				transition: Bounce,
+			});
+
+			// Navigate to the requested route or home
+			setTimeout(() => {
+				navigate(location.state?.from || "/");
+			}, 500);
+		} catch (error) {
+			console.error("Google sign-in failed:", error.message);
+			toast.error(`Google sign-in failed: ${error.message}`, {
+				position: "top-right",
+				autoClose: 3000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				theme: "light",
+				transition: Bounce,
+			});
+		}
+	};
+
+	// Regular registration method
+	const onSubmit = async (data) => {
 		const { fullName, email, password, profileImage } = data;
 
-		createUser(email, password)
-			.then(async(result) => {
-				console.log("User registered:", result.user);
-				const userInfo = {
-					email: data.email,
-					photoURL: profilePic,
-					fullName: data.fullName,
-					role: "user",
-					created_at: new Date().toISOString(),
-					last_logged_in: new Date().toISOString(),
-				};
-				const userRes = await axiosInstance.post("/users", userInfo);
-				console.log(userRes.data);
-				toast.success("User registered successfully!", {
-					position: "top-right",
-					autoClose: 2000,
-					hideProgressBar: false,
-					closeOnClick: true,
-					pauseOnHover: true,
-					draggable: true,
-					theme: "light",
-					transition: Bounce,
-				});
+		try {
+			// Create a new user in Firebase or your auth system
+			await createUser(email, password);
 
-				// ⏳ Delay navigation by 2 seconds to allow the toast to show
-				setTimeout(() => {
-					navigate(location.state?.from || "/");
-				}, 500);
-			})
-			.catch((error) => {
-				console.error("Registration error:", error.message);
-				toast.error(`Registration failed: ${error.message}`, {
-					position: "top-right",
-					autoClose: 3000,
-					hideProgressBar: false,
-					closeOnClick: true,
-					pauseOnHover: true,
-					draggable: true,
-					theme: "light",
-					transition: Bounce,
-				});
+			// Create user info object
+			const userInfo = {
+				email,
+				fullName,
+				photoURL: profilePic || profileImage, // Use either selected or uploaded profile image
+				role: "user",
+				created_at: new Date().toISOString(),
+				last_logged_in: new Date().toISOString(),
+			};
+
+			// Send user info to backend
+			const userRes = await axiosInstance.post("/users", userInfo);
+			console.log(userRes.data);
+			toast.success("User registered successfully!", {
+				position: "top-right",
+				autoClose: 2000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				theme: "light",
+				transition: Bounce,
 			});
+
+			// ⏳ Delay navigation by 2 seconds to allow the toast to show
+			setTimeout(() => {
+				navigate(location.state?.from || "/");
+			}, 500);
+		} catch (error) {
+			console.error("Registration error:", error.message);
+			toast.error(`Registration failed: ${error.message}`, {
+				position: "top-right",
+				autoClose: 3000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				theme: "light",
+				transition: Bounce,
+			});
+		}
 	};
-    
 
-    const handleGoogleRegister =  (data) => {
-        signInWithGoogle()
-					.then(async (result) => {
-						console.log("Google sign-in successful:", result.user);
-						const userInfo = {
-							email: data.email,
-							photoURL: profilePic,
-							fullName: data.fullName,
-							role: "user",
-							created_at: new Date().toISOString(),
-							last_logged_in: new Date().toISOString(),
-						};
-						const userRes = await axiosInstance.post("/users", userInfo);
-						console.log(userRes.data);
-						toast.success("Logged in with Google successfully!", {
-							position: "top-right",
-							autoClose: 2000,
-							hideProgressBar: false,
-							closeOnClick: true,
-							pauseOnHover: true,
-							draggable: true,
-							theme: "light",
-							transition: Bounce,
-						});
+	const handleUploadImage = async (e) => {
+		const image = e.target.files[0];
+		console.log(image);
 
-						setTimeout(() => {
-							navigate(location.state?.from || "/");
-						}, 500);
-					})
-					.catch((error) => {
-						console.error("Google sign-in failed:", error.message);
-						toast.error(`Google sign-in failed: ${error.message}`, {
-							position: "top-right",
-							autoClose: 3000,
-							hideProgressBar: false,
-							closeOnClick: true,
-							pauseOnHover: true,
-							draggable: true,
-							theme: "light",
-							transition: Bounce,
-						});
-					});
-		};
-	
-		const handleUploadImage = async (e) => {
-			const image = e.target.files[0];
-			console.log(image);
+		const formData = new FormData();
+		formData.append("image", image);
 
-			const formData = new FormData();
-			formData.append("image", image);
-
-			const imageUploadUrl = `https://api.imgbb.com/1/upload?key=${
-				import.meta.env.VITE_image_upload_key
-			}`;
-			const res = await axiosInstance.post(imageUploadUrl, formData);
-			setProfilePic(res.data.data.url);
-		};
+		const imageUploadUrl = `https://api.imgbb.com/1/upload?key=${
+			import.meta.env.VITE_image_upload_key
+		}`;
+		const res = await axiosInstance.post(imageUploadUrl, formData);
+		setProfilePic(res.data.data.url);
+	};
 
 	return (
 		<div className="min-h-screen bg-stone-200 flex items-center justify-center p-6 noticia">
@@ -243,14 +254,8 @@ const axiosInstance  = useAxios()
 									type="file"
 									accept="image/*"
 									onChange={handleUploadImage}
-									
 									className="w-full pl-10 pr-4 py-2 file:bg-stone-200 file:border-none file:rounded file:px-3 file:py-1 file:cursor-pointer border rounded bg-stone-50 border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-400"
 								/>
-								{errors.profileImage && (
-									<p className="text-red-500 text-xs mt-1">
-										{errors.profileImage.message}
-									</p>
-								)}
 							</div>
 						</div>
 
@@ -265,6 +270,7 @@ const axiosInstance  = useAxios()
 							<span>Or</span>
 						</div>
 
+						{/* Google Login */}
 						<button
 							type="button"
 							onClick={handleGoogleRegister}

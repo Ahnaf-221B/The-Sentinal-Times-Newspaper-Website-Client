@@ -10,7 +10,7 @@ import useAxios from "../../hooks/useAxios";
 
 const Login = () => {
 	const [showPassword, setShowPassword] = useState(false);
-    const { signIn, signInWithGoogle } = use(AuthContext);
+    const { signIn, signInWithGoogle,user } = use(AuthContext);
     const location = useLocation();
 		const navigate = useNavigate();
 		const axiosInstance = useAxios()
@@ -19,6 +19,8 @@ const Login = () => {
 		handleSubmit,
 		formState: { errors },
 	} = useForm();
+
+	
 
     const onSubmit = (data) => {
 			const { email, password } = data;
@@ -68,39 +70,54 @@ const Login = () => {
 		};
       
 
-        const handleGoogleSignIn =  () => {
-            signInWithGoogle()
-							.then((result) => {
-								console.log("Google sign-in successful:", result.user);
+        const handleGoogleSignIn = async () => {
+            try {
+							// Google sign-in
+							const result = await signInWithGoogle();
+							const { email, displayName, photoURL } = result.user;
 
-								toast.success("Logged in with Google successfully!", {
-									position: "top-right",
-									autoClose: 2000,
-									hideProgressBar: false,
-									closeOnClick: true,
-									pauseOnHover: true,
-									draggable: true,
-									theme: "light",
-									transition: Bounce,
-								});
+							// Create user info object
+							const userInfo = {
+								email,
+								fullName: displayName,
+								photoURL:
+									photoURL ||
+									"https://placehold.co/40x40/cccccc/ffffff?text=User", // Fallback image
+								role: "user",
+								created_at: new Date().toISOString(),
+								last_logged_in: new Date().toISOString(),
+							};
 
-								setTimeout(() => {
-									navigate(location.state?.from || "/");
-								}, 500);
-							})
-							.catch((error) => {
-								console.error("Google sign-in failed:", error.message);
-								toast.error(`Google sign-in failed: ${error.message}`, {
-									position: "top-right",
-									autoClose: 3000,
-									hideProgressBar: false,
-									closeOnClick: true,
-									pauseOnHover: true,
-									draggable: true,
-									theme: "light",
-									transition: Bounce,
-								});
+							// Send user info to backend
+							const userRes = await axiosInstance.post("/users", userInfo);
+							toast.success("Logged in with Google successfully!", {
+								position: "top-right",
+								autoClose: 2000,
+								hideProgressBar: false,
+								closeOnClick: true,
+								pauseOnHover: true,
+								draggable: true,
+								theme: "light",
+								transition: Bounce,
 							});
+
+							// Navigate to the requested route or home
+							setTimeout(() => {
+								navigate(location.state?.from || "/");
+							}, 500);
+						} catch (error) {
+							console.error("Google sign-in failed:", error.message);
+							toast.error(`Google sign-in failed: ${error.message}`, {
+								position: "top-right",
+								autoClose: 3000,
+								hideProgressBar: false,
+								closeOnClick: true,
+								pauseOnHover: true,
+								draggable: true,
+								theme: "light",
+								transition: Bounce,
+							});
+						}
 				};
 
 	return (

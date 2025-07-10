@@ -20,15 +20,15 @@ const Navbar = () => {
 	// Navigation items with their corresponding routes
 	const navItems = [
 		{ name: "Home", path: "/" },
-		{ name: "World", path: "/world" },
-		{ name: "Politics", path: "/politics" },
+		{ name: "Add Article", path: "/add-article" },
+		{ name: "All Articles", path: "/all-articles" },
 		{ name: "Sports", path: "/sports" },
 		{ name: "Entertainment", path: "/entertainment" },
 		{ name: "Opinion", path: "/opinion" },
 	];
 
 	return (
-		<nav className="bg-white shadow-lg">
+		<nav className="bg-stone-100 shadow-lg">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6">
 				<div className="flex justify-between h-16 items-center">
 					{/* Logo */}

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { Link, Route, Switch } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { FaHome, FaUsers, FaNewspaper, FaPlus, FaBars } from "react-icons/fa";
-
 
 const DashboardLayout = () => {
 	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -15,14 +14,14 @@ const DashboardLayout = () => {
 		<div className="flex h-screen">
 			{/* Sidebar */}
 			<aside
-				className={`w-64 bg-gray-800 text-white p-5 transition-all duration-300 ${
+				className={`w-64 bg-gray-800 text-white p-8 transition-all duration-300 ${
 					isSidebarOpen ? "block" : "hidden sm:block"
 				}`}
 			>
 				<div className="flex items-center mb-6">
 					{/* Logo and Title */}
 					<img
-						src="your-logo-url-here.png" // Replace with your logo image
+						src="https://i.postimg.cc/fy4csVxj/image.png" // Replace with your logo image
 						alt="Logo"
 						className="w-8 h-8 mr-4"
 					/>
@@ -32,17 +31,17 @@ const DashboardLayout = () => {
 				{/* Sidebar Links */}
 				<ul className="space-y-4">
 					<li>
-						<Link
-							to="/admin/all-articles"
+						<NavLink
+							to="/dashboard/all-articles"
 							className="flex items-center gap-3 hover:text-gray-400"
 						>
 							<FaNewspaper />
 							<span>All Articles</span>
-						</Link>
+						</NavLink>
 					</li>
 					<li>
 						<Link
-							to="/admin/all-users"
+							to="/dashboard/all-users"
 							className="flex items-center gap-3 hover:text-gray-400"
 						>
 							<FaUsers />
@@ -50,19 +49,19 @@ const DashboardLayout = () => {
 						</Link>
 					</li>
 					<li>
-						<Link
-							to="/admin/add-publisher"
+						<NavLink
+							to="/dashboard/add-publisher"
 							className="flex items-center gap-3 hover:text-gray-400"
 						>
 							<FaPlus />
 							<span>Add Publisher</span>
-						</Link>
+						</NavLink>
 					</li>
 				</ul>
 			</aside>
-
+			<Outlet></Outlet>
 			{/* Main Content Area */}
-			<main className="flex-1 bg-gray-100 p-8">
+			<main className="flex-1 bg-gray-100 ">
 				{/* Hamburger Menu for Small Screens */}
 				<button
 					className="sm:hidden p-2 bg-gray-800 text-white rounded-md"
@@ -70,12 +69,6 @@ const DashboardLayout = () => {
 				>
 					<FaBars />
 				</button>
-
-				<Switch>
-					<Route path="/admin/all-articles" component={AllArticles} />
-					<Route path="/admin/all-users" component={AllUsers} />
-					<Route path="/admin/add-publisher" component={AddPublisher} />
-				</Switch>
 			</main>
 		</div>
 	);

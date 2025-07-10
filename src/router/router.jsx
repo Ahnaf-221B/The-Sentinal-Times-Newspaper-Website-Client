@@ -6,6 +6,10 @@ import Register from "../Authentication/Register/Register";
 
 import Payment from "../pages/Payment/Payment";
 import DashboardLayout from "../layout/DashboardLayout";
+import AddPublisher from "../pages/Dashboard/AddPublisher/AddPublisher";
+import AllArticle from "../pages/Dashboard/AllArticle/AllArticle";
+import AllUsers from "../pages/Dashboard/AllUsers/AllUsers";
+import AddArticle from "../pages/AddArticle/AddArticle";
 
 export const router  = createBrowserRouter([
     {
@@ -27,6 +31,10 @@ export const router  = createBrowserRouter([
            {
             path:'/payment',
             element: <Payment></Payment>
+           },
+           {
+            path:'/add-article',
+            element: <AddArticle></AddArticle>
            }
 
         ]
@@ -36,7 +44,16 @@ export const router  = createBrowserRouter([
         element : <DashboardLayout></DashboardLayout>,
         children:[
            {
-            
+            path:'add-publisher',
+            element: <AddPublisher></AddPublisher>
+           },
+           {
+            path: 'all-articles',
+            element: <AllArticle></AllArticle>
+           },
+           {
+            path:'all-users',
+            element: <AllUsers></AllUsers>
            }
         ]
     }
