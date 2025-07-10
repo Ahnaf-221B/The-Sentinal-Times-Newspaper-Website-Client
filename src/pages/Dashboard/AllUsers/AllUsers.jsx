@@ -76,7 +76,7 @@ const AllUsers = () => {
 	}
 
 	return (
-		<div className="flex-1 p-8 bg-gray-100 min-h-screen">
+		<div className=" p-8 bg-gray-200 min-h-screen w-full">
 			<h1 className="text-3xl font-bold mb-8 text-gray-800">All Users</h1>
 
 			{users.length === 0 ? (

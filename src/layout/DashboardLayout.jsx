@@ -32,6 +32,15 @@ const DashboardLayout = () => {
 				<ul className="space-y-4">
 					<li>
 						<NavLink
+							to="/"
+							className="flex items-center gap-3 hover:text-gray-400"
+						>
+							<FaHome />
+							<span>Home</span>
+						</NavLink>
+					</li>
+					<li>
+						<NavLink
 							to="/dashboard/all-articles"
 							className="flex items-center gap-3 hover:text-gray-400"
 						>

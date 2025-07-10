@@ -20,7 +20,7 @@ const AddPublisher = () => {
 
 		try {
 			// Upload the image to ImgBB
-			const res = await axios.post(imageUploadUrl, formData, {
+			const res = await axiosInstance.post(imageUploadUrl, formData, {
 				headers: {
 					"Content-Type": "multipart/form-data", // Make sure we set this header for file uploads
 				},

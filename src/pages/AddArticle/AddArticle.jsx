@@ -1,18 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, use } from "react";
 import { toast } from "react-toastify";
-import { useForm } from "react-hook-form";
-import axios from "axios"; // axios for making HTTP requests
+import { useForm, Controller } from "react-hook-form"; // Import Controller
+
 import Select from "react-select"; // react-select for multi-select
 import useAxios from "../../hooks/useAxios";
+import { AuthContext } from "../../Context/AuthContext";
 
 const AddArticle = () => {
 	const [publishers, setPublishers] = useState([]); // State to store publishers
 	const [imageUrl, setImageUrl] = useState(""); // State for image URL
 	const [error, setError] = useState(""); // State to store error messages
-    const axiosInstance = useAxios()
+	const axiosInstance = useAxios();
+	const {user} = useContext(AuthContext)
 	const {
 		register,
 		handleSubmit,
+		control, // Use control for react-select
 		formState: { errors },
 	} = useForm();
 
@@ -34,7 +37,7 @@ const AddArticle = () => {
 		};
 
 		fetchPublishers(); // Call function to fetch publishers
-	}, []);
+	}, [axiosInstance]);
 
 	// Handle image upload via ImgBB
 	const handleUploadImage = async (e) => {
@@ -50,8 +53,8 @@ const AddArticle = () => {
 			const res = await axiosInstance.post(imageUploadUrl, formData, {
 				headers: { "Content-Type": "multipart/form-data" },
 			});
-			setImageUrl(res.data.data.url); // Set the image URL
-			toast.success("Image uploaded successfully!");
+			setImageUrl(res.data.data.url); 
+		
 		} catch (error) {
 			console.error("Error uploading image:", error);
 			toast.error("Failed to upload image.");
@@ -66,32 +69,54 @@ const AddArticle = () => {
 			toast.error("Please upload an image for the article.");
 			return;
 		}
-
+		const selectedPublisher = publishers.find(
+			(pub) => pub.value === publisher.value
+		);
+		const publisherName = selectedPublisher ? selectedPublisher.label : "";
 		try {
 			const articleData = {
+				authorName: user.displayName,
+				authorImage: user.photoURL,
+				authorEmail: user.email,
+				publisher: publisherName,
+
 				title,
 				publisherId: publisher.value,
 				imageUrl,
 				tags: tags.map((tag) => tag.value),
 				description,
-				status: "pending", // Set initial status to pending
+				status: "pending", 
 				createdAt: new Date().toISOString(),
 			};
+		
+			
+			console.log("Article Data:", articleData);
+			
+			
 
-			const response = await axios.post("/articles", articleData);
+			const response = await axiosInstance.post("/articles", articleData);
+
+			
+			console.log("Article Response:", response);
 
 			if (response.status === 201) {
 				toast.success(
 					"Article submitted successfully! Awaiting admin approval."
 				);
-				setImageUrl(""); // Reset the image URL
-				document.getElementById("articleForm").reset(); // Reset form
+				setImageUrl("");
+				document.getElementById("articleForm").reset(); 
+			} else {
+				
+				toast.error("Failed to submit article.");
 			}
 		} catch (error) {
 			console.error("Error submitting article:", error);
 			toast.error("Failed to submit article.");
 		}
-	};
+		
+		};
+	  
+
 
 	return (
 		<div className="p-8 bg-stone-200 rounded-lg shadow-lg max-w-3xl mx-auto mt-10 mb-10">
@@ -122,17 +147,20 @@ const AddArticle = () => {
 				{/* Publisher Dropdown */}
 				<div>
 					<label className="block text-sm text-gray-700 mb-1">Publisher</label>
-					<select
-						{...register("publisher", { required: "Publisher is required" })}
-						className="w-full px-4 py-2 border border-gray-300 rounded-md"
-					>
-						<option value="">Select Publisher</option>
-						{publishers.map((publisher) => (
-							<option key={publisher.value} value={publisher.value}>
-								{publisher.label}
-							</option>
-						))}
-					</select>
+					<Controller
+						name="publisher"
+						control={control}
+						rules={{ required: "Publisher is required" }}
+						render={({ field }) => (
+							<Select
+								{...field}
+								options={publishers} // Options passed from the state
+								getOptionLabel={(e) => e.label} // Display the publisher name
+								getOptionValue={(e) => e.value} // Set the publisher ID as the value
+								placeholder="Select Publisher"
+							/>
+						)}
+					/>
 					{errors.publisher && (
 						<p className="text-red-500 text-xs mt-1">
 							{errors.publisher.message}
@@ -143,15 +171,22 @@ const AddArticle = () => {
 				{/* Tags (react-select multi select) */}
 				<div>
 					<label className="block text-sm text-gray-700 mb-1">Tags</label>
-					<Select
-						{...register("tags", { required: "At least one tag is required" })}
-						isMulti
-						options={[
-							{ value: "technology", label: "Technology" },
-							{ value: "health", label: "Health" },
-							{ value: "business", label: "Business" },
-							{ value: "education", label: "Education" },
-						]}
+					<Controller
+						name="tags"
+						control={control} // Pass control to the Controller
+						rules={{ required: "At least one tag is required" }}
+						render={({ field }) => (
+							<Select
+								{...field}
+								isMulti
+								options={[
+									{ value: "technology", label: "Technology" },
+									{ value: "health", label: "Health" },
+									{ value: "business", label: "Business" },
+									{ value: "education", label: "Education" },
+								]}
+							/>
+						)}
 					/>
 					{errors.tags && (
 						<p className="text-red-500 text-xs mt-1">{errors.tags.message}</p>
