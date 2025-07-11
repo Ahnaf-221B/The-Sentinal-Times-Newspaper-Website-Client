@@ -1,10 +1,13 @@
-import { useContext, useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { AuthContext } from "../../Context/AuthContext";
+import useAxios from "../../hooks/useAxios";
 
 const Navbar = () => {
 	const [isOpen, setIsOpen] = useState(false);
+	const [role, setRole] = useState(null); // To store the user role (admin or user)
 	const { user, logOut } = useContext(AuthContext);
+	const axiosInstance = useAxios();
 
 	const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -12,10 +15,28 @@ const Navbar = () => {
 		try {
 			await logOut();
 			console.log("User logged out");
+			setRole(null); // Reset role when logging out
 		} catch (err) {
 			console.error("Logout error:", err.message);
 		}
 	};
+
+	// Fetch user's role from the backend when the user is logged in
+	useEffect(() => {
+		if (user && user.email) {
+			const fetchUserRole = async () => {
+				try {
+					const response = await axiosInstance.get(`/users/${user.email}/role`);
+					setRole(response.data.role); // Set role to admin or user
+				} catch (err) {
+					console.error("Error fetching user role:", err);
+					setRole("user"); // Default to user if there's an error
+				}
+			};
+
+			fetchUserRole();
+		}
+	}, [user]);
 
 	// Navigation items with their corresponding routes
 	const navItems = [
@@ -23,13 +44,17 @@ const Navbar = () => {
 		{ name: "Add Article", path: "/add-article" },
 		{ name: "All Articles", path: "/all-articles" },
 		{ name: "Premium Article", path: "/premium-article" },
-		{name : "Subscription", path: "/subscription"},
+		{ name: "Subscription", path: "/subscription" },
 		{ name: "My Article", path: "/my-article" },
-		{ name: "Dashboard", path: "/dashboard" },
 	];
 
+	// Conditionally include the "Dashboard" link if the user is an admin
+	if (role === "admin") {
+		navItems.push({ name: "Dashboard", path: "/dashboard" });
+	}
+
 	return (
-		<nav className="bg-stone-100 shadow-lg">
+		<nav className="bg-stone-200 shadow-lg">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6">
 				<div className="flex justify-between h-16 items-center">
 					{/* Logo */}

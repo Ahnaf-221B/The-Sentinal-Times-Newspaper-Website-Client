@@ -16,6 +16,7 @@ import PremiumArticle from "../pages/PremiumArticle/PremiumArticle";
 import MyArticle from "../pages/MyArticle/MyArticle";
 import PaymentForm from "../pages/Payment/PaymentForm";
 import MakePayment from "../pages/Payment/MakePayment";
+import AdminRoute from "../routes/AdminRoute";
 
 export const router  = createBrowserRouter([
     {
@@ -70,7 +71,7 @@ export const router  = createBrowserRouter([
     },
     {
         path:'/dashboard',
-        element : <DashboardLayout></DashboardLayout>,
+        element :<AdminRoute><DashboardLayout></DashboardLayout></AdminRoute> ,
         children:[
            {
             path:'add-publisher',

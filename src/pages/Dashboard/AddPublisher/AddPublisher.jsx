@@ -40,6 +40,7 @@ const AddPublisher = () => {
 
 		if (!publisherName || !logoFile) {
 			toast.error("Please provide both publisher name and logo.");
+			console.log("Missing data:", { publisherName, logoFile });
 			return;
 		}
 		try {
