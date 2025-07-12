@@ -5,7 +5,8 @@ import useAxios from "../../hooks/useAxios";
 
 const Navbar = () => {
 	const [isOpen, setIsOpen] = useState(false);
-	const [role, setRole] = useState(null); // To store the user role (admin or user)
+	const [role, setRole] = useState(null); // Store the user role (admin or user)
+	const [isPremium, setIsPremium] = useState(false); // Track premium status
 	const { user, logOut } = useContext(AuthContext);
 	const axiosInstance = useAxios();
 
@@ -16,42 +17,67 @@ const Navbar = () => {
 			await logOut();
 			console.log("User logged out");
 			setRole(null); // Reset role when logging out
+			setIsPremium(false); // Reset premium status
 		} catch (err) {
 			console.error("Logout error:", err.message);
 		}
 	};
 
-	// Fetch user's role from the backend when the user is logged in
+	// Fetch user's role and premium status from the backend when the user is logged in
 	useEffect(() => {
-		if (user && user.email) {
-			const fetchUserRole = async () => {
+		if (user?.email) {
+			const fetchUserStatus = async () => {
 				try {
-					const response = await axiosInstance.get(`/users/${user.email}/role`);
-					setRole(response.data.role); // Set role to admin or user
+					// Check premium status first
+					const premiumRes = await axiosInstance.get(
+						`/users/${user.email}/premium-status`
+					);
+					setIsPremium(premiumRes.data.isPremium);
+
+					// Then check role
+					const roleRes = await axiosInstance.get(`/users/${user.email}/role`);
+					setRole(roleRes.data.role);
 				} catch (err) {
-					console.error("Error fetching user role:", err);
-					setRole("user"); // Default to user if there's an error
+					console.error("Error fetching user status:", err);
+					setIsPremium(false);
+					setRole("user");
 				}
 			};
 
-			fetchUserRole();
+			fetchUserStatus();
+
+			// Set up interval to check premium status periodically
+			const interval = setInterval(fetchUserStatus, 30000); // Check every 30 seconds
+			return () => clearInterval(interval);
 		}
 	}, [user]);
+	
 
 	// Navigation items with their corresponding routes
-	const navItems = [
-		{ name: "Home", path: "/" },
-		{ name: "Add Article", path: "/add-article" },
-		{ name: "All Articles", path: "/all-articles" },
-		{ name: "Premium Article", path: "/premium-article" },
-		{ name: "Subscription", path: "/subscription" },
-		{ name: "My Article", path: "/my-article" },
-	];
+	const getNavItems = () => {
+		const items = [
+			{ name: "Home", path: "/" },
+			{ name: "Add Article", path: "/add-article" },
+			{ name: "All Articles", path: "/all-articles" },
+			{ name: "Subscription", path: "/subscription" },
+			{ name: "My Article", path: "/my-article" },
+		];
 
-	// Conditionally include the "Dashboard" link if the user is an admin
-	if (role === "admin") {
-		navItems.push({ name: "Dashboard", path: "/dashboard" });
-	}
+		// Add premium article link if user is premium
+		if (isPremium) {
+			items.splice(3, 0, {
+				name: "Premium Articles",
+				path: "/premium-article",
+			});
+		}
+
+		// Add dashboard if admin
+		if (role === "admin") {
+			items.push({ name: "Dashboard", path: "/dashboard" });
+		}
+
+		return items;
+	};
 
 	return (
 		<nav className="bg-stone-200 shadow-lg">
@@ -69,21 +95,24 @@ const Navbar = () => {
 
 					{/* Desktop Menu */}
 					<div className="hidden md:flex space-x-6 items-center">
-						{navItems.map((item) => (
-							<NavLink
-								key={item.name}
-								to={item.path}
-								className={({ isActive }) =>
-									`px-1 py-2 text-sm font-medium ${
-										isActive
-											? "text-blue-600 border-b-2 border-blue-600"
-											: "text-gray-700 hover:text-blue-600 hover:border-b-2 hover:border-blue-300"
-									}`
-								}
-							>
-								{item.name}
-							</NavLink>
-						))}
+						{getNavItems().map(
+							(item) =>
+								item && (
+									<NavLink
+										key={item.name}
+										to={item.path}
+										className={({ isActive }) =>
+											`px-1 py-2 text-sm font-medium ${
+												isActive
+													? "text-blue-600 border-b-2 border-blue-600"
+													: "text-gray-700 hover:text-blue-600 hover:border-b-2 hover:border-blue-300"
+											}`
+										}
+									>
+										{item.name}
+									</NavLink>
+								)
+						)}
 					</div>
 
 					{/* Auth Buttons */}
@@ -134,22 +163,25 @@ const Navbar = () => {
 			{/* Mobile Menu */}
 			{isOpen && (
 				<div className="md:hidden px-4 pb-4 space-y-2 bg-white shadow-md">
-					{navItems.map((item) => (
-						<NavLink
-							key={item.name}
-							to={item.path}
-							className={({ isActive }) =>
-								`block px-3 py-2 ${
-									isActive
-										? "text-blue-600 font-medium"
-										: "text-gray-700 hover:text-blue-600"
-								}`
-							}
-							onClick={toggleMenu}
-						>
-							{item.name}
-						</NavLink>
-					))}
+					{navItems.map(
+						(item) =>
+							item && (
+								<NavLink
+									key={item.name}
+									to={item.path}
+									className={({ isActive }) =>
+										`block px-3 py-2 ${
+											isActive
+												? "text-blue-600 font-medium"
+												: "text-gray-700 hover:text-blue-600"
+										}`
+									}
+									onClick={toggleMenu}
+								>
+									{item.name}
+								</NavLink>
+							)
+					)}
 
 					<div className="pt-4 border-t border-gray-300">
 						{user ? (
