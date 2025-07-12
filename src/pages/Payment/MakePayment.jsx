@@ -3,6 +3,7 @@ import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useNavigate, useLocation } from "react-router-dom";
 import useAxios from "../../hooks/useAxios";
 import { AuthContext } from "../../Context/AuthContext";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 const MakePayment = () => {
 	const stripe = useStripe();
@@ -66,6 +67,11 @@ const MakePayment = () => {
 
 			if (result.error) {
 				setError(result.error.message);
+				Swal.fire({
+					icon: "error",
+					title: "Payment Failed",
+					text: result.error.message,
+				});
 			} else if (result.paymentIntent.status === "succeeded") {
 				// Update premium status with the calculated expiration date
 				await axiosInstance.put(`/users/${user.email}/update-premium`, {
@@ -76,11 +82,24 @@ const MakePayment = () => {
 				setSuccess(
 					"Payment successful! Your premium subscription is now active."
 				);
-				setTimeout(() => navigate("/"), 2000);
+
+				// Show SweetAlert for success
+				Swal.fire({
+					icon: "success",
+					title: "Payment Successful",
+					text: "Your premium subscription is now active.",
+				}).then(() => {
+					setTimeout(() => navigate("/"), 2000); // Navigate after alert
+				});
 			}
 		} catch (err) {
 			console.error(err);
 			setError("Payment failed. Please try again.");
+			Swal.fire({
+				icon: "error",
+				title: "Payment Error",
+				text: "An error occurred while processing your payment. Please try again.",
+			});
 		}
 	};
 
@@ -102,7 +121,7 @@ const MakePayment = () => {
 	};
 
 	return (
-		<div className="max-w-2xl mx-auto mt-10">
+		<div className="mb-10 max-w-2xl mx-auto mt-10">
 			<div className="bg-white shadow p-6 rounded-lg">
 				<h2 className="text-xl font-semibold mb-4">Complete your payment</h2>
 

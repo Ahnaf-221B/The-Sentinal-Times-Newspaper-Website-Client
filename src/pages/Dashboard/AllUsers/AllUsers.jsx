@@ -3,22 +3,26 @@ import { toast } from "react-toastify";
 import useAxios from "../../../hooks/useAxios"; // Assuming this path is correct for your useAxios hook
 
 const AllUsers = () => {
-	const [users, setUsers] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
-	const axiosInstance = useAxios(); // Initialize your custom axios instance
+	const [users, setUsers] = useState([]); // Users data
+	const [loading, setLoading] = useState(true); // Loading state
+	const [error, setError] = useState(null); // Error state
+	const [currentPage, setCurrentPage] = useState(1); // Current page number
+	const [totalPages, setTotalPages] = useState(1); // Total pages for pagination
+	const [itemsPerPage] = useState(10); // Number of items per page
+	const axiosInstance = useAxios(); // Axios instance
 
-	// Function to fetch all users from the backend
-	const fetchUsers = async () => {
+	// Function to fetch all users from the backend with pagination
+	const fetchUsers = async (page) => {
 		setLoading(true);
 		setError(null);
 		try {
-			// Assuming your backend has an endpoint like /users to get all users
-			const response = await axiosInstance.get("/users");
+			const response = await axiosInstance.get("/users", {
+				params: { page, limit: itemsPerPage },
+			});
 
 			if (response.status === 200) {
-				// Assuming the response data is an array of user objects
-				setUsers(response.data);
+				setUsers(response.data.users);
+				setTotalPages(response.data.totalPages); // Set total pages
 			} else {
 				setError("Failed to load users.");
 				toast.error("Failed to load users.");
@@ -32,21 +36,17 @@ const AllUsers = () => {
 		}
 	};
 
-	// useEffect to fetch users when the component mounts
+	// useEffect to fetch users when the component mounts or page changes
 	useEffect(() => {
-		fetchUsers();
-	}, [axiosInstance]); // Re-run if axiosInstance changes (though typically it won't)
+		fetchUsers(currentPage);
+	}, [currentPage]);
 
 	// Function to handle making a user an admin
 	const handleMakeAdmin = async (userId) => {
 		try {
-			// Assuming your backend has an endpoint like /users/:id/make-admin
-			// and it updates the user's role to 'admin'
 			const response = await axiosInstance.patch(`/users/${userId}/make-admin`);
-
 			if (response.status === 200) {
 				toast.success("User is now an admin!");
-				// Optimistically update the UI or refetch users to show the change
 				setUsers((prevUsers) =>
 					prevUsers.map((user) =>
 						user._id === userId ? { ...user, role: "admin" } : user
@@ -57,6 +57,12 @@ const AllUsers = () => {
 			console.error("Error making user admin:", err);
 			toast.error("Failed to make user admin.");
 		}
+	};
+
+	// Handle page change (prev/next)
+	const handlePageChange = (page) => {
+		if (page < 1 || page > totalPages) return; // Prevent going out of bounds
+		setCurrentPage(page);
 	};
 
 	if (loading) {
@@ -76,7 +82,7 @@ const AllUsers = () => {
 	}
 
 	return (
-		<div className=" p-8 bg-gray-200 min-h-screen w-full">
+		<div className="p-8 bg-gray-200 min-h-screen w-full">
 			<h1 className="text-3xl font-bold mb-8 text-gray-800">All Users</h1>
 
 			{users.length === 0 ? (
@@ -123,20 +129,20 @@ const AllUsers = () => {
 													src={
 														user.photoURL ||
 														"https://placehold.co/40x40/cccccc/ffffff?text=User"
-													} // Placeholder if no photo
-													alt={`${user.fullName || user.name}'s profile`} // Updated alt text
+													}
+													alt={`${user.fullName || user.name}'s profile`}
 													onError={(e) => {
 														e.target.onerror = null;
 														e.target.src =
 															"https://placehold.co/40x40/cccccc/ffffff?text=User";
-													}} // Fallback on error
+													}}
 												/>
 											</div>
 										</div>
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<div className="text-sm font-medium text-gray-900">
-											{user.fullName || user.name || "N/A"}{" "}
+											{user.fullName || user.name || "N/A"}
 										</div>
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
@@ -164,6 +170,25 @@ const AllUsers = () => {
 					</table>
 				</div>
 			)}
+
+			{/* Pagination Controls */}
+			<div className="mt-6 flex justify-center">
+				<button
+					className="px-4 py-2 bg-gray-500 text-white rounded-lg mx-2"
+					disabled={currentPage === 1}
+					onClick={() => handlePageChange(currentPage - 1)}
+				>
+					Prev
+				</button>
+				<span className="px-4 py-2 text-lg font-medium">{currentPage}</span>
+				<button
+					className="px-4 py-2 bg-gray-500 text-white rounded-lg mx-2"
+					disabled={currentPage === totalPages}
+					onClick={() => handlePageChange(currentPage + 1)}
+				>
+					Next
+				</button>
+			</div>
 		</div>
 	);
 };

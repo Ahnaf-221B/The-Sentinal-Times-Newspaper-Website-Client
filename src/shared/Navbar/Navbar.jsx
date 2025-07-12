@@ -145,20 +145,21 @@ const Navbar = () => {
 												{user.displayName || "User"}
 											</p>
 											<p className="text-xs text-gray-500">{user.email}</p>
-											<div className="mt-3">
+											<div className="mt-3 space-y-2">
 												<Link
 													to="/my-profile"
-													className="text-sm text-blue-600 hover:underline"
+													className="block text-left pytext-sm font-medium text-gray-700 hover:underline  rounded-md transition"
+													role="button"
 												>
 													My Profile
 												</Link>
+												<button
+													onClick={handleLogout}
+													className="block  text-left text-sm font-medium bg-red-500 p-1 text-white  rounded-md transition"
+												>
+													Logout
+												</button>
 											</div>
-											<button
-												onClick={handleLogout}
-												className="mt-3 text-red-600 text-sm hover:underline"
-											>
-												Logout
-											</button>
 										</div>
 									)}
 								</div>

@@ -19,6 +19,7 @@ import MakePayment from "../pages/Payment/MakePayment";
 import AdminRoute from "../routes/AdminRoute";
 import MyProfile from "../pages/MyProfile/MyProfile";
 import DashboardHome from "../pages/Dashboard/DashboardHome.jsx/DashboardHome";
+import PrivateRoute from "../routes/PrivateRoute";
 
 export const router  = createBrowserRouter([
     {
@@ -39,11 +40,11 @@ export const router  = createBrowserRouter([
            },
            {
             path:'/payment',
-            element: <Payment></Payment>
+            element: <PrivateRoute><Payment></Payment></PrivateRoute>
            },
            {
             path:'/add-article',
-            element: <AddArticle></AddArticle>
+            element: <PrivateRoute><AddArticle></AddArticle></PrivateRoute>
            },
            {
             path:'/all-articles',
@@ -55,15 +56,15 @@ export const router  = createBrowserRouter([
            },
            {
             path:'/premium-article',
-            element: <PremiumArticle></PremiumArticle>
+            element: <PrivateRoute><PremiumArticle></PremiumArticle></PrivateRoute>
            },
            {
             path:'/my-article',
-            element: <MyArticle></MyArticle>
+            element: <PrivateRoute><MyArticle></MyArticle></PrivateRoute>
            },
            {
             path:'/subscription',
-           element: <PaymentForm></PaymentForm>
+           element: <PrivateRoute><PaymentForm></PaymentForm></PrivateRoute>
            },
            {
             path: '/make-payment',
@@ -71,7 +72,7 @@ export const router  = createBrowserRouter([
            },
            {
             path:'/my-profile',
-            element: <MyProfile></MyProfile>
+            element: <PrivateRoute><MyProfile></MyProfile></PrivateRoute>
            }
         ]
     },
