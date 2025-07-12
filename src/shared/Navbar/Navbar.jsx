@@ -7,10 +7,12 @@ const Navbar = () => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [role, setRole] = useState(null); // Store the user role (admin or user)
 	const [isPremium, setIsPremium] = useState(false); // Track premium status
-	const { user, logOut } = useContext(AuthContext);
+	const { user, logOut, updateUserProfile } = useContext(AuthContext);
+	const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // Toggle Profile dropdown
 	const axiosInstance = useAxios();
 
 	const toggleMenu = () => setIsOpen(!isOpen);
+	const toggleProfileMenu = () => setIsProfileMenuOpen(!isProfileMenuOpen);
 
 	const handleLogout = async () => {
 		try {
@@ -51,7 +53,6 @@ const Navbar = () => {
 			return () => clearInterval(interval);
 		}
 	}, [user]);
-	
 
 	// Navigation items with their corresponding routes
 	const getNavItems = () => {
@@ -77,6 +78,17 @@ const Navbar = () => {
 		}
 
 		return items;
+	};
+
+	const handleProfileUpdate = async (profileInfo) => {
+		try {
+			// Use the updateUserProfile method from AuthContext to update the profile
+			await updateUserProfile(profileInfo);
+			alert("Profile updated successfully!");
+		} catch (error) {
+			console.error("Error updating profile:", error);
+			alert("Failed to update profile.");
+		}
 	};
 
 	return (
@@ -115,21 +127,41 @@ const Navbar = () => {
 						)}
 					</div>
 
-					{/* Auth Buttons */}
+					{/* Auth Buttons and Profile */}
 					<div className="flex items-center space-x-4">
 						{user ? (
 							<>
-								<img
-									src={user.photoURL || "https://i.ibb.co/4pDNDk1/avatar.png"}
-									alt="profile"
-									className="h-10 w-10 rounded-full border border-gray-400"
-								/>
-								<button
-									onClick={handleLogout}
-									className="text-white text-lg hover:underline bg-red-600 h-10 w-20 rounded-xl"
-								>
-									Logout
-								</button>
+								<div className="relative">
+									<img
+										src={user.photoURL || "https://i.ibb.co/4pDNDk1/avatar.png"}
+										alt="profile"
+										className="h-10 w-10 rounded-full border border-gray-400 cursor-pointer"
+										onClick={toggleProfileMenu}
+									/>
+									{/* Profile dropdown */}
+									{isProfileMenuOpen && (
+										<div className="absolute top-12 right-0 bg-white border shadow-md rounded-lg p-4 w-48">
+											<p className="text-sm font-semibold text-gray-800">
+												{user.displayName || "User"}
+											</p>
+											<p className="text-xs text-gray-500">{user.email}</p>
+											<div className="mt-3">
+												<Link
+													to="/my-profile"
+													className="text-sm text-blue-600 hover:underline"
+												>
+													My Profile
+												</Link>
+											</div>
+											<button
+												onClick={handleLogout}
+												className="mt-3 text-red-600 text-sm hover:underline"
+											>
+												Logout
+											</button>
+										</div>
+									)}
+								</div>
 							</>
 						) : (
 							<>
@@ -163,7 +195,7 @@ const Navbar = () => {
 			{/* Mobile Menu */}
 			{isOpen && (
 				<div className="md:hidden px-4 pb-4 space-y-2 bg-white shadow-md">
-					{navItems.map(
+					{getNavItems().map(
 						(item) =>
 							item && (
 								<NavLink

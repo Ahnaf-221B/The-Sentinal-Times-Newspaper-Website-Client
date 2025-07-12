@@ -17,6 +17,7 @@ import MyArticle from "../pages/MyArticle/MyArticle";
 import PaymentForm from "../pages/Payment/PaymentForm";
 import MakePayment from "../pages/Payment/MakePayment";
 import AdminRoute from "../routes/AdminRoute";
+import MyProfile from "../pages/MyProfile/MyProfile";
 
 export const router  = createBrowserRouter([
     {
@@ -66,6 +67,10 @@ export const router  = createBrowserRouter([
            {
             path: '/make-payment',
             element: <Payment></Payment>
+           },
+           {
+            path:'/my-profile',
+            element: <MyProfile></MyProfile>
            }
         ]
     },
