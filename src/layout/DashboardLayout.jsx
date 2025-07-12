@@ -17,6 +17,7 @@ const DashboardLayout = () => {
 				className={`sticky top-0 z-50 w-64 bg-gray-800 text-white p-8 transition-all duration-300 ${
 					isSidebarOpen ? "block" : "hidden sm:block"
 				}`}
+				style={{ position: "sticky", top: 0, height: "100vh" }}
 			>
 				<div className="flex items-center mb-6">
 					{/* Logo and Title */}
@@ -68,9 +69,8 @@ const DashboardLayout = () => {
 					</li>
 				</ul>
 			</aside>
-			<Outlet></Outlet>
 			{/* Main Content Area */}
-			<main className="flex-1 bg-gray-100 ">
+			<main className="flex-1 bg-gray-100 overflow-y-auto p-6">
 				{/* Hamburger Menu for Small Screens */}
 				<button
 					className="sm:hidden p-2 bg-gray-800 text-white rounded-md"
@@ -78,6 +78,9 @@ const DashboardLayout = () => {
 				>
 					<FaBars />
 				</button>
+
+				{/* Outlet for child routes */}
+				<Outlet />
 			</main>
 		</div>
 	);
