@@ -18,6 +18,7 @@ import PaymentForm from "../pages/Payment/PaymentForm";
 import MakePayment from "../pages/Payment/MakePayment";
 import AdminRoute from "../routes/AdminRoute";
 import MyProfile from "../pages/MyProfile/MyProfile";
+import DashboardHome from "../pages/Dashboard/DashboardHome.jsx/DashboardHome";
 
 export const router  = createBrowserRouter([
     {
@@ -78,6 +79,10 @@ export const router  = createBrowserRouter([
         path:'/dashboard',
         element :<AdminRoute><DashboardLayout></DashboardLayout></AdminRoute> ,
         children:[
+            {
+                index:true,
+                element: <DashboardHome></DashboardHome>
+            },
            {
             path:'add-publisher',
             element: <AddPublisher></AddPublisher>

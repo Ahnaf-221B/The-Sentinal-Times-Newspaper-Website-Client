@@ -30,7 +30,7 @@ const Login = () => {
 					console.log("User logged in:", result.user);
 					const userInfo = {
 						email: data.email,
-						photoURL: profilePic,
+						
 						fullName: data.fullName,
 						role: "user",
 						created_at: new Date().toISOString(),

@@ -39,13 +39,13 @@ const TrendingArticles = () => {
 				showStatus={false} // Hide the status (e.g., slide count)
 				autoPlay={true} // Enable auto play
 				interval={3000} // Set auto play interval in milliseconds
-				transitionTime={500} // Transition time for slides
+				transitionTime={300} // Transition time for slides
 				swipeable={true} // Enable swipe for touch devices
 				dynamicHeight={true} // Adjust height dynamically based on content
 			>
 				{topArticles.map((article) => (
 					<div key={article._id} className="flex justify-center items-center">
-						<div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out transform hover:scale-105">
+						<div className=" p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out transform hover:scale-105">
 							{/* Full-width image */}
 							<img
 								src={article.imageUrl}
