@@ -16,6 +16,10 @@ const MakePayment = () => {
 	const subscriptionPeriod = location.state?.subscriptionPeriod || "1min";
 	const amount = location.state?.amount || 99;
 	const axiosInstance = useAxios();
+	const { updatePremiumStatus } = useContext(AuthContext);
+
+	// After successful subscription
+	updatePremiumStatus(true); // Set isPremium to true to reflect in Navbar
 
 	// Calculate expiration date based on subscription period
 	const calculateExpirationDate = (period) => {

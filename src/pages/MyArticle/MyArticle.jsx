@@ -112,7 +112,7 @@ const MyArticle = () => {
 				My Articles
 			</h1>
 
-			<div className="overflow-x-auto bg-white shadow-md rounded-lg">
+			<div className="overflow-x-auto bg-white shadow-md rounded-lg max-w-7xl mx-auto">
 				<table className="min-w-full text-left">
 					<thead className="bg-gray-100">
 						<tr>

@@ -23,7 +23,7 @@ const PublisherList = () => {
 	return (
 		<div className="container mx-auto p-6">
 			<h2 className="text-3xl font-semibold text-center mb-8 mt-12">Publishers</h2>
-			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
+			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12 max-w-7xl mx-auto">
 				{/* Render Publisher Card for each publisher */}
 				{publishers.map((publisher) => (
 					<div key={publisher._id}>

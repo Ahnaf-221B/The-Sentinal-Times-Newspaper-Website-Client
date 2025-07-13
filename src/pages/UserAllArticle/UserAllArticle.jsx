@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
- 
+import React, { useState, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
 import Select from "react-select";
 import useAxios from "../../hooks/useAxios";
+import { AuthContext } from "../../Context/AuthContext";
 
 const UserAllArticle = () => {
 	const [articles, setArticles] = useState([]);
@@ -10,7 +10,8 @@ const UserAllArticle = () => {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [publisherFilter, setPublisherFilter] = useState(null);
 	const [tagsFilter, setTagsFilter] = useState(null);
-	const [publishers, setPublishers] = useState([]); // Store publishers
+	const [publishers, setPublishers] = useState([]);
+	const { user } = useContext(AuthContext); // Get the current user
 	const axiosInstance = useAxios();
 
 	// Fetch publishers when the component mounts
@@ -19,10 +20,10 @@ const UserAllArticle = () => {
 			try {
 				const response = await axiosInstance.get("/publishers");
 				const publisherOptions = response.data.map((publisher) => ({
-					value: publisher._id, // Publisher ID
-					label: publisher.publisherName, // Publisher Name
+					value: publisher._id,
+					label: publisher.publisherName,
 				}));
-				setPublishers(publisherOptions); // Update publishers state
+				setPublishers(publisherOptions);
 			} catch (error) {
 				console.error("Error fetching publishers:", error);
 				toast.error("Failed to load publishers.");
@@ -38,10 +39,10 @@ const UserAllArticle = () => {
 			try {
 				const response = await axiosInstance.get("/articles/admin", {
 					params: {
-						status: "approved", // Only approved articles
-						publisher: publisherFilter?.value, // Filter by publisher if selected
-						tags: tagsFilter?.value, // Filter by tags if selected
-						search: searchTerm, // Filter by title search term
+						status: "approved",
+						publisher: publisherFilter?.value,
+						tags: tagsFilter?.value,
+						search: searchTerm,
 					},
 				});
 				setArticles(response.data);
@@ -69,35 +70,25 @@ const UserAllArticle = () => {
 		setPublisherFilter(selectedPublisher);
 	};
 
-	// Handle tags filter change
-	const handleTagsChange = (selectedTags) => {
-		setTagsFilter(selectedTags);
-	};
 
 	// Navigate to article details page (this is a placeholder for routing)
 	const goToArticleDetails = (articleId) => {
-		// You can use `history.push` if you're using react-router-dom, or link to the details page
 		window.location.href = `/article-details/${articleId}`;
 	};
 
 	return (
-		<div className="container mx-auto p-6 bg-stone-200">
+		<div className="container mx-auto p-6 bg-stone-200 ">
 			<h1 className="text-4xl font-semibold text-center mb-8">All Articles</h1>
 
 			{/* Search Bar */}
-			<div className="mb-6">
+			<div className="mb-6 max-w-7xl mx-auto flex gap-10">
 				<input
 					type="text"
 					value={searchTerm}
 					onChange={handleSearch}
-					className="w-full px-4 py-2 border border-gray-300 rounded-md"
+					className="w-full px-4 py-2 border border-gray-300 rounded-md bg-stone-100"
 					placeholder="Search articles by title..."
 				/>
-			</div>
-
-			{/* Filters for publisher and tags */}
-			<div className="flex justify-between mb-6">
-				{/* Publisher Filter */}
 				<div className="w-1/4">
 					<Select
 						placeholder="Select Publisher"
@@ -105,37 +96,30 @@ const UserAllArticle = () => {
 						onChange={handlePublisherChange}
 					/>
 				</div>
-
-				{/* Tags Filter */}
-				<div className="w-1/4">
-					<Select
-						isMulti
-						placeholder="Select Tags"
-						options={[
-							{ value: "technology", label: "Technology" },
-							{ value: "health", label: "Health" },
-							{ value: "business", label: "Business" },
-							{ value: "education", label: "Education" },
-						]}
-						onChange={handleTagsChange}
-					/>
-				</div>
 			</div>
 
+			
+
 			{/* Articles */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 ">
+			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-14 max-w-7xl mx-auto mb-10 ">
 				{filteredArticles.map((article) => (
 					<div
 						key={article._id}
-						className={`bg-stone-100 p-6 rounded-lg shadow-lg hover:shadow-xl ${
-							article.isPremium ? "border-4 border-yellow-500" : ""
-						}`}
+						className={`bg-stone-100 p-4 rounded-lg shadow-lg hover:shadow-xl ${
+							article.isPremium
+								? "border-4 border-yellow-500 transform transition-all duration-500 scale-105"
+								: ""
+						} flex flex-col`} // Ensure flex column layout
 					>
-						<img
-							src={article.imageUrl}
-							alt={article.title}
-							className="w-full h-48 object-cover rounded-md mb-4"
-						/>
+						<div className="relative mb-4 flex-grow">
+							{" "}
+							{/* Flex-grow ensures image is above the content */}
+							<img
+								src={article.imageUrl}
+								alt={article.title}
+								className="w-full h-48 object-cover rounded-md"
+							/>
+						</div>
 						<h3 className="text-xl font-semibold text-gray-800">
 							{article.title}
 						</h3>
@@ -146,23 +130,28 @@ const UserAllArticle = () => {
 							<strong>Description:</strong>{" "}
 							{article.description.substring(0, 100)}...
 						</p>
-						<div className="mt-4 flex justify-between space-x-2">
+
+						<div className="mt-6 flex justify-between items-center">
 							<button
 								onClick={() => goToArticleDetails(article._id)}
-								className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+								className={`${
+									article.isPremium && !user?.isPremium
+										? "bg-gray-400 cursor-not-allowed px-4 py-2 rounded-lg"
+										: "bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+								}`}
+								disabled={article.isPremium && !user?.isPremium}
 							>
 								Details
 							</button>
-							{/* Disable button if article is premium and user is not subscribed */}
+							{/* Premium/Free Button */}
 							<button
-								// disabled={article.isPremium && !user.isSubscribed}
-								// className={`${
-								// 	article.isPremium && !user.isSubscribed
-								// 		? "bg-gray-400 cursor-not-allowed"
-								// 		: "bg-green-500"
-								// } text-white py-2 px-4 rounded-lg hover:bg-green-600`}
+								className={`${
+									article.isPremium
+										? "bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600"
+										: "bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
+								}`}
 							>
-								{article.isPremium ? "Premium" : "Read"}
+								{article.isPremium ? "Premium" : "Free"}
 							</button>
 						</div>
 					</div>

@@ -31,7 +31,7 @@ const PaymentForm = () => {
 	};
 
 	return (
-		<div className="max-w-2xl mx-auto mt-10">
+		<div className="max-w-2xl mx-auto mt-10 mb-10">
 			<SubscriptionBanner />
 			<div className="bg-white shadow p-6 rounded-lg">
 				<h2 className="text-xl font-semibold mb-4">Choose Your Subscription</h2>

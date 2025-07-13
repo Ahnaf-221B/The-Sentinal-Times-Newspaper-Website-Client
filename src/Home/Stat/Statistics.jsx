@@ -30,7 +30,7 @@ const Statistics = () => {
 				User Statistics
 			</h1>
 
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+			<div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
 				{/* Total Users Section */}
 				<div className="bg-white p-6 rounded-lg shadow-md">
 					<h2 className="text-xl font-semibold text-gray-700">Total Users</h2>

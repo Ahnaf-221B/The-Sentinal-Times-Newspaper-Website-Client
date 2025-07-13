@@ -1,58 +1,23 @@
 import { useState, useContext, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { AuthContext } from "../../Context/AuthContext";
-import useAxios from "../../hooks/useAxios";
+import { AuthContext } from "../../Context/AuthContext"; // Import AuthContext
 
 const Navbar = () => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [role, setRole] = useState(null); // Store the user role (admin or user)
-	const [isPremium, setIsPremium] = useState(false); // Track premium status
-	const { user, logOut, updateUserProfile } = useContext(AuthContext);
+	const { user, logOut, isPremium } = useContext(AuthContext); // Get isPremium from context
 	const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // Toggle Profile dropdown
-	const axiosInstance = useAxios();
-
 	const toggleMenu = () => setIsOpen(!isOpen);
 	const toggleProfileMenu = () => setIsProfileMenuOpen(!isProfileMenuOpen);
 
 	const handleLogout = async () => {
 		try {
 			await logOut();
-			console.log("User logged out");
 			setRole(null); // Reset role when logging out
-			setIsPremium(false); // Reset premium status
 		} catch (err) {
 			console.error("Logout error:", err.message);
 		}
 	};
-
-	// Fetch user's role and premium status from the backend when the user is logged in
-	useEffect(() => {
-		if (user?.email) {
-			const fetchUserStatus = async () => {
-				try {
-					// Check premium status first
-					const premiumRes = await axiosInstance.get(
-						`/users/${user.email}/premium-status`
-					);
-					setIsPremium(premiumRes.data.isPremium);
-
-					// Then check role
-					const roleRes = await axiosInstance.get(`/users/${user.email}/role`);
-					setRole(roleRes.data.role);
-				} catch (err) {
-					console.error("Error fetching user status:", err);
-					setIsPremium(false);
-					setRole("user");
-				}
-			};
-
-			fetchUserStatus();
-
-			// Set up interval to check premium status periodically
-			const interval = setInterval(fetchUserStatus, 30000); // Check every 30 seconds
-			return () => clearInterval(interval);
-		}
-	}, [user]);
 
 	// Navigation items with their corresponding routes
 	const getNavItems = () => {
@@ -80,19 +45,14 @@ const Navbar = () => {
 		return items;
 	};
 
-	const handleProfileUpdate = async (profileInfo) => {
-		try {
-			// Use the updateUserProfile method from AuthContext to update the profile
-			await updateUserProfile(profileInfo);
-			alert("Profile updated successfully!");
-		} catch (error) {
-			console.error("Error updating profile:", error);
-			alert("Failed to update profile.");
+	useEffect(() => {
+		if (user?.email) {
+			// Fetch role or other logic based on the user email if needed
 		}
-	};
+	}, [user]);
 
 	return (
-		<nav className="bg-stone-200 shadow-lg">
+		<nav className="bg-stone-200 shadow-lg noticia">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6">
 				<div className="flex justify-between h-16 items-center">
 					{/* Logo */}
@@ -100,9 +60,11 @@ const Navbar = () => {
 						<img
 							src="https://i.postimg.cc/fy4csVxj/image.png"
 							alt="DailyNews Logo"
-							className="h-12 w-12 object-contain"
+							className="h-12 w-12 object-cover rounded-full"
 						/>
-						<h1 className="text-2xl font-bold text-gray-800">DailyNews</h1>
+						<h1 className="text-2xl font-bold text-gray-800">
+							The Sentinal <br /> <span className="ml-19">Times</span>
+						</h1>
 					</div>
 
 					{/* Desktop Menu */}
@@ -148,14 +110,14 @@ const Navbar = () => {
 											<div className="mt-3 space-y-2">
 												<Link
 													to="/my-profile"
-													className="block text-left pytext-sm font-medium text-gray-700 hover:underline  rounded-md transition"
+													className="block text-left pytext-sm font-medium text-gray-700 hover:underline rounded-md transition"
 													role="button"
 												>
 													My Profile
 												</Link>
 												<button
 													onClick={handleLogout}
-													className="block  text-left text-sm font-medium bg-red-500 p-1 text-white  rounded-md transition"
+													className="block text-left text-sm font-medium bg-red-500 p-1 text-white rounded-md transition"
 												>
 													Logout
 												</button>

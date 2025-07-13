@@ -20,15 +20,18 @@ import AdminRoute from "../routes/AdminRoute";
 import MyProfile from "../pages/MyProfile/MyProfile";
 import DashboardHome from "../pages/Dashboard/DashboardHome.jsx/DashboardHome";
 import PrivateRoute from "../routes/PrivateRoute";
+import Forbidden from "../pages/Forbidden/Forbidden";
 
 export const router  = createBrowserRouter([
     {
         path: '/',
         element: <RootLayout></RootLayout>,
+        errorElement: <Forbidden></Forbidden>,
         children:[
             {
                  index:true,
                  element: <Home></Home>
+               
             },
             {
                 path: '/login',
