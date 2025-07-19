@@ -1,23 +1,66 @@
-import { useState, useContext, useEffect } from "react";
-import { Link, NavLink } from "react-router-dom";
+import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../Context/AuthContext"; // Import AuthContext
+import useAxios from "../../hooks/useAxios"; // Import axiosInstance from the custom hook
+import { Link, NavLink } from "react-router-dom";
 
 const Navbar = () => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [role, setRole] = useState(null); // Store the user role (admin or user)
-	const { user, logOut, isPremium } = useContext(AuthContext); // Get isPremium from context
+	const { user, logOut, isPremium } = useContext(AuthContext); // Get isPremium and user from context
 	const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // Toggle Profile dropdown
+	const axiosInstance = useAxios(); // Get the axiosInstance
+
 	const toggleMenu = () => setIsOpen(!isOpen);
 	const toggleProfileMenu = () => setIsProfileMenuOpen(!isProfileMenuOpen);
 
+	// Handle user logout
 	const handleLogout = async () => {
 		try {
-			await logOut();
+			await logOut(); // Log the user out using the logOut function from AuthContext
 			setRole(null); // Reset role when logging out
 		} catch (err) {
-			console.error("Logout error:", err.message);
+			console.error("Logout error:", err.message); // Handle any errors during logout
 		}
 	};
+
+	// Fetch role when the user is authenticated and has an email
+	useEffect(() => {
+		const fetchUserRole = async () => {
+			if (user?.email) {
+				try {
+					console.log("Fetching role for user with email:", user.email); // Debugging log
+
+				
+					const response = await axiosInstance.get(`/users/${user.email}/role`);
+
+					
+					if (response.status === 200) {
+						
+
+						
+						if (response.data.role) {
+							setRole(response.data.role); // Update the role in state
+						} else {
+							console.error("Role not found in response");
+						}
+					} else {
+						console.error("Error fetching role:", response.statusText);
+					}
+				} catch (err) {
+					console.error("Error fetching user role:", err);
+				}
+			} else {
+				console.error("User email is not available");
+			}
+		};
+
+		fetchUserRole();
+	}, [user]); // Trigger fetch when `user` changes
+
+	// Log the role to check if it's being set properly
+	useEffect(() => {
+		console.log("User role:", role); // Debugging: check the role state after fetch
+	}, [role]);
 
 	// Navigation items with their corresponding routes
 	const getNavItems = () => {
@@ -44,12 +87,6 @@ const Navbar = () => {
 
 		return items;
 	};
-
-	useEffect(() => {
-		if (user?.email) {
-			// Fetch role or other logic based on the user email if needed
-		}
-	}, [user]);
 
 	return (
 		<nav className="bg-stone-200 shadow-lg noticia">
@@ -116,7 +153,7 @@ const Navbar = () => {
 													My Profile
 												</Link>
 												<button
-													onClick={handleLogout}
+													onClick={handleLogout} // Logout when the button is clicked
 													className="block text-left text-sm font-medium bg-red-500 p-1 text-white rounded-md transition"
 												>
 													Logout
@@ -164,12 +201,13 @@ const Navbar = () => {
 								<NavLink
 									key={item.name}
 									to={item.path}
-									className={({ isActive }) =>
-										`block px-3 py-2 ${
-											isActive
-												? "text-blue-600 font-medium"
-												: "text-gray-700 hover:text-blue-600"
-										}`
+									className={
+										({ isActive }) =>
+											`block px-3 py-2 ${
+												isActive
+													? "text-blue-600 font-medium"
+													: "text-gray-700 hover:text-blue-600"
+											}` // Ensure that mobile menu links are styled correctly
 									}
 									onClick={toggleMenu}
 								>
@@ -192,7 +230,7 @@ const Navbar = () => {
 									</span>
 								</div>
 								<button
-									onClick={handleLogout}
+									onClick={handleLogout} // Logout when the button is clicked
 									className="text-red-600 text-sm font-medium hover:underline"
 								>
 									Logout
@@ -202,12 +240,13 @@ const Navbar = () => {
 							<>
 								<NavLink
 									to="/login"
-									className={({ isActive }) =>
-										`block px-3 py-2 mb-2 ${
-											isActive
-												? "text-blue-600 font-medium"
-												: "text-gray-700 hover:text-blue-600"
-										}`
+									className={
+										({ isActive }) =>
+											`block px-3 py-2 mb-2 ${
+												isActive
+													? "text-blue-600 font-medium"
+													: "text-gray-700 hover:text-blue-600"
+											}` // Ensure that mobile menu links are styled correctly
 									}
 									onClick={toggleMenu}
 								>
@@ -215,12 +254,13 @@ const Navbar = () => {
 								</NavLink>
 								<NavLink
 									to="/register"
-									className={({ isActive }) =>
-										`inline-block px-3 py-1 rounded text-sm ${
-											isActive
-												? "bg-blue-700 text-white"
-												: "bg-blue-600 text-white hover:bg-blue-700"
-										}`
+									className={
+										({ isActive }) =>
+											`inline-block px-3 py-1 rounded text-sm ${
+												isActive
+													? "bg-blue-700 text-white"
+													: "bg-blue-600 text-white hover:bg-blue-700"
+											}` // Ensure mobile Register button is styled
 									}
 									onClick={toggleMenu}
 								>

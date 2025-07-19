@@ -10,14 +10,15 @@ import {
 	updateProfile,
 } from "firebase/auth";
 import { auth } from "../firebase/firebase.config";
-import useAxios from "../hooks/useAxios"; // Import axios instance
+import useAxios from "../hooks/useAxios";
 
 const AuthProvider = ({ children }) => {
 	const googleProvider = new GoogleAuthProvider();
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [isPremium, setIsPremium] = useState(false);
-	const axiosInstance = useAxios(); // Initialize axios instance
+	const [role, setRole] = useState(null); // Add role state
+	const axiosInstance = useAxios();
 
 	const createUser = (email, password) => {
 		setLoading(true);
@@ -40,19 +41,25 @@ const AuthProvider = ({ children }) => {
 
 	const logOut = () => {
 		setLoading(true);
+		setRole(null); // Reset role on logout
 		return signOut(auth);
 	};
 
 	const fetchUserStatus = async () => {
 		if (user?.email) {
 			try {
-				const premiumRes = await axiosInstance.get(
-					`/users/${user.email}/premium-status`
-				);
+				// Fetch both premium status and role in parallel
+				const [premiumRes, roleRes] = await Promise.all([
+					axiosInstance.get(`/users/${user.email}/premium-status`),
+					axiosInstance.get(`/users/${user.email}/role`),
+				]);
+
 				setIsPremium(premiumRes.data.isPremium);
+				setRole(roleRes.data.role); // Set the role from response
 			} catch (err) {
 				console.error("Error fetching user status:", err);
 				setIsPremium(false);
+				setRole("user"); // Default to 'user' if error occurs
 			}
 		}
 	};
@@ -63,16 +70,18 @@ const AuthProvider = ({ children }) => {
 			console.log("User in the auth state change", currentUser);
 			setLoading(false);
 			if (currentUser) {
-				fetchUserStatus(); // Fetch user status after user is set
+				fetchUserStatus(); // Fetch both premium status and role
+			} else {
+				setRole(null); // Clear role when no user
+				setIsPremium(false); // Clear premium status when no user
 			}
 		});
 
 		return () => {
 			unSubscribe();
 		};
-	}, [user]); // Only run this effect when `user` changes
+	}, []); // Removed user from dependencies to prevent infinite loop
 
-	// Update the isPremium state dynamically after a successful subscription.
 	const updatePremiumStatus = (newStatus) => {
 		setIsPremium(newStatus);
 	};
@@ -87,7 +96,8 @@ const AuthProvider = ({ children }) => {
 		updateUserProfile,
 		fetchUserStatus,
 		isPremium,
-		updatePremiumStatus, // Add this function so that it can be used to update `isPremium` from other components
+		role, // Include role in context
+		updatePremiumStatus,
 	};
 
 	return (

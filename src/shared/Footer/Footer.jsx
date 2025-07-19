@@ -69,7 +69,7 @@ const Footer = () => {
 				</div>
 
 				{/* Bottom */}
-				<div className="mt-10 border-t border-gray-700 pt-6 text-center text-sm text-gray-500">
+				<div className="mt-6 border-t border-gray-700 pt-2 text-center text-sm text-gray-500">
 					&copy; {new Date().getFullYear()} The Sentinal Times. All rights reserved.
 				</div>
 			</div>

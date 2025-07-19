@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import useAxios from "../../hooks/useAxios";
 import { AuthContext } from "../../Context/AuthContext";
 import Modal from "react-modal";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
+import { useQuery } from "@tanstack/react-query";
+import Swal from "sweetalert2";
 
 const MyArticle = () => {
 	const { user } = useContext(AuthContext); // Accessing logged-in user from context
-	const [articles, setArticles] = useState([]);
 	const [modalIsOpen, setModalIsOpen] = useState(false);
 	const [declineReason, setDeclineReason] = useState("");
 	const [selectedArticleId, setSelectedArticleId] = useState(null);
@@ -17,24 +19,28 @@ const MyArticle = () => {
 		imageUrl: "",
 	});
 	const axiosInstance = useAxios();
+	const axiosSecure = useAxiosSecure();
 
-	// Fetch the articles of the logged-in user
-	useEffect(() => {
-		if (user) {
-			const fetchArticles = async () => {
-				try {
-					const response = await axiosInstance.get("/articles/myarticle", {
-						params: { email: user.email },
-					});
-					setArticles(response.data);
-				} catch (error) {
-					console.error("Error fetching articles:", error);
-				}
-			};
-
-			fetchArticles();
+	// Fetch the articles of the logged-in user using TanStack Query
+	const { 
+		data: articles = [], 
+		isLoading, 
+		isError, 
+		refetch 
+	} = useQuery({
+		queryKey: ["myArticles", user?.email],
+		queryFn: async () => {
+			if (!user) return [];
+			const response = await axiosSecure.get("/articles/myarticle", {
+				params: { email: user.email },
+			});
+			return response.data;
+		},
+		enabled: !!user,
+		onError: (error) => {
+			console.error("Error fetching articles:", error);
 		}
-	}, [user]);
+	});
 
 	// Open the modal with the article's data to update
 	const openUpdateModal = (article) => {
@@ -46,12 +52,15 @@ const MyArticle = () => {
 			publisher: article.publisher,
 			imageUrl: article.imageUrl,
 		});
+		// Reset decline reason to ensure update form shows
+		setDeclineReason("");
 		setModalIsOpen(true);
 	};
 
 	// Close the modal
 	const closeModal = () => {
 		setModalIsOpen(false);
+		// Reset all modal-related states
 		setArticleData({
 			title: "",
 			description: "",
@@ -59,6 +68,8 @@ const MyArticle = () => {
 			publisher: "",
 			imageUrl: "",
 		});
+		setDeclineReason("");
+		setSelectedArticleId(null);
 	};
 
 	// Handle article update
@@ -74,35 +85,85 @@ const MyArticle = () => {
 
 			await axiosInstance.put(`/articles/${selectedArticleId}`, updatedArticle);
 
-			// Update UI after successful update
-			setArticles(
-				articles.map((article) =>
-					article._id === selectedArticleId
-						? { ...article, ...updatedArticle }
-						: article
-				)
-			);
-
+			// Refetch articles to update UI
+			refetch();
 			closeModal();
+			
+			// Show success message
+			Swal.fire({
+				title: "Success!",
+				text: "Article updated successfully",
+				icon: "success",
+				confirmButtonText: "OK"
+			});
 		} catch (error) {
 			console.error("Error updating article:", error);
+			
+			// Show error message
+			Swal.fire({
+				title: "Error!",
+				text: "Failed to update article",
+				icon: "error",
+				confirmButtonText: "OK"
+			});
 		}
 	};
 
 	// Handle article deletion
 	const handleDelete = async (articleId) => {
-		try {
-			await axiosInstance.delete(`/articles/${articleId}`);
-			setArticles(articles.filter((article) => article._id !== articleId));
-		} catch (error) {
-			console.error("Error deleting article:", error);
+		// Show confirmation dialog
+		const result = await Swal.fire({
+			title: "Are you sure?",
+			text: "You won't be able to revert this!",
+			icon: "warning",
+			showCancelButton: true,
+			confirmButtonColor: "#3085d6",
+			cancelButtonColor: "#d33",
+			confirmButtonText: "Yes, delete it!"
+		});
+		
+		// If user confirms deletion
+		if (result.isConfirmed) {
+			try {
+				await axiosInstance.delete(`/articles/${articleId}`);
+				// Refetch articles to update UI
+				refetch();
+				
+				// Show success message
+				Swal.fire({
+					title: "Deleted!",
+					text: "Your article has been deleted.",
+					icon: "success",
+					confirmButtonText: "OK"
+				});
+			} catch (error) {
+				console.error("Error deleting article:", error);
+				
+				// Show error message
+				Swal.fire({
+					title: "Error!",
+					text: "Failed to delete article",
+					icon: "error",
+					confirmButtonText: "OK"
+				});
+			}
 		}
 	};
+	
+
 
 	// Open the modal for the reason when the article is declined
 	const openDeclineModal = (articleId, reason) => {
 		setSelectedArticleId(articleId);
 		setDeclineReason(reason);
+		// Reset article data to ensure no conflicts with update form
+		setArticleData({
+			title: "",
+			description: "",
+			tags: "",
+			publisher: "",
+			imageUrl: "",
+		});
 		setModalIsOpen(true);
 	};
 
@@ -112,7 +173,37 @@ const MyArticle = () => {
 				My Articles
 			</h1>
 
-			<div className="overflow-x-auto bg-white shadow-md rounded-lg max-w-7xl mx-auto">
+			{isLoading && (
+				<div className="flex justify-center items-center h-64">
+					<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+				</div>
+			)}
+
+			{isError && (
+				<div className="text-center py-10">
+					<p className="text-red-500 mb-4">Failed to load articles. Please try again.</p>
+					<button
+						onClick={() => refetch()}
+						className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+					>
+						Retry
+					</button>
+				</div>
+			)}
+
+			{!isLoading && !isError && articles.length === 0 && (
+				<div className="text-center py-16 bg-gray-50 rounded-xl max-w-7xl mx-auto">
+					<h3 className="text-2xl font-medium text-gray-700 mb-2">
+						No Articles Found
+					</h3>
+					<p className="text-gray-500 max-w-md mx-auto">
+						You haven't created any articles yet. Start writing to see them here.
+					</p>
+				</div>
+			)}
+
+			{!isLoading && !isError && articles.length > 0 && (
+				<div className="overflow-x-auto bg-white shadow-md rounded-lg max-w-7xl mx-auto">
 				<table className="min-w-full text-left">
 					<thead className="bg-gray-100">
 						<tr>
@@ -183,7 +274,8 @@ const MyArticle = () => {
 						))}
 					</tbody>
 				</table>
-			</div>
+				</div>
+			)}
 
 			{/* Modal to display the decline reason */}
 			<Modal
@@ -277,7 +369,21 @@ const MyArticle = () => {
 
 						<div className="mt-4">
 							<button
-								onClick={handleUpdate}
+								onClick={() => {
+									Swal.fire({
+										title: "Are you sure?",
+										text: "Do you want to update this article?",
+										icon: "question",
+										showCancelButton: true,
+										confirmButtonColor: "#3085d6",
+										cancelButtonColor: "#d33",
+										confirmButtonText: "Yes, update it!"
+									}).then((result) => {
+										if (result.isConfirmed) {
+											handleUpdate();
+										}
+									});
+								}}
 								className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
 							>
 								Update Article

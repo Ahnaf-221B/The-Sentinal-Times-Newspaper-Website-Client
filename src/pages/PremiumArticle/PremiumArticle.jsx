@@ -1,33 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import useAxios from "../../hooks/useAxios";
 import { FiStar, FiClock, FiUser, FiBook } from "react-icons/fi";
 import { FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 const PremiumArticle = () => {
-	const [premiumArticles, setPremiumArticles] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
 	const axiosInstance = useAxios();
-
-	useEffect(() => {
-		const fetchPremiumArticles = async () => {
-			try {
-				setLoading(true);
-				const response = await axiosInstance.get("/articles", {
-					params: { isPremium: "true", page: 1, limit: 6 }, // Increased limit to 6 for better grid layout
-				});
-				setPremiumArticles(response.data?.articles || []);
-			} catch (error) {
-				console.error("Error fetching premium articles:", error);
-				setError("Failed to load premium articles. Please try again.");
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		fetchPremiumArticles();
-	}, []);
+	
+	const {
+		data: premiumArticles = [],
+		isLoading: loading,
+		isError,
+		error,
+		refetch
+	} = useQuery({
+		queryKey: ["premiumArticles"],
+		queryFn: async () => {
+			const response = await axiosInstance.get("/articles", {
+				params: { isPremium: "true", page: 1, limit: 6 }, // Increased limit to 6 for better grid layout
+			});
+			return response.data?.articles || [];
+		},
+		onError: (error) => {
+			console.error("Error fetching premium articles:", error);
+		}
+	});
 
 	if (loading) {
 		return (
@@ -37,12 +35,12 @@ const PremiumArticle = () => {
 		);
 	}
 
-	if (error) {
+	if (isError) {
 		return (
 			<div className="text-center py-10">
-				<p className="text-red-500 mb-4">{error}</p>
+				<p className="text-red-500 mb-4">Failed to load premium articles. Please try again.</p>
 				<button
-					onClick={() => window.location.reload()}
+					onClick={() => refetch()}
 					className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
 				>
 					Retry

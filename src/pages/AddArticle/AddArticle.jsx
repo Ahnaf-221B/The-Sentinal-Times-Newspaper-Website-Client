@@ -1,60 +1,99 @@
-import React, { useState, useEffect, useContext, use } from "react";
+import React, { useState, useContext } from "react";
 import { toast } from "react-toastify";
-import { useForm, Controller } from "react-hook-form"; // Import Controller
-
-import Select from "react-select"; // react-select for multi-select
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
+import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../hooks/useAxios";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 import { AuthContext } from "../../Context/AuthContext";
 
 const AddArticle = () => {
-	const [publishers, setPublishers] = useState([]); // State to store publishers
-	const [imageUrl, setImageUrl] = useState(""); // State for image URL
-	const [error, setError] = useState(""); // State to store error messages
+	const [imageUrl, setImageUrl] = useState("");
+	const [error, setError] = useState("");
 	const axiosInstance = useAxios();
-	const {user} = useContext(AuthContext)
+	const axiosSecure = useAxiosSecure();
+	const { user } = useContext(AuthContext);
+
 	const {
 		register,
 		handleSubmit,
-		control, // Use control for react-select
+		control,
 		formState: { errors },
+		reset,
 	} = useForm();
 
-	// Fetch publishers when the component mounts
-	useEffect(() => {
-		const fetchPublishers = async () => {
+	// Check user's status with TanStack Query
+	const { data: userStatus = { isPremium: false, hasArticle: false } } =
+		useQuery({
+			queryKey: ["userStatus", user?.email],
+			queryFn: async () => {
+				if (!user?.email) return { isPremium: false, hasArticle: false };
+
+				try {
+					// Check premium status
+					const premiumRes = await axiosInstance.get(
+						`/users/${user.email}/premium-status`
+					);
+					const isPremium = premiumRes.data.isPremium;
+
+					// Check existing articles only if not premium
+					let hasArticle = false;
+					if (!isPremium) {
+						const articlesRes = await axiosInstance.get(`/articles/myarticle`, {
+							params: { email: user.email },
+						});
+						hasArticle = articlesRes.data.length > 0;
+					}
+
+					return { isPremium, hasArticle };
+				} catch (error) {
+					console.error("Error checking user status:", error);
+					toast.error("Failed to verify user status.");
+					return { isPremium: false, hasArticle: false };
+				}
+			},
+			enabled: !!user?.email,
+		});
+
+	// Fetch publishers with TanStack Query
+	const { data: publishers = [] } = useQuery({
+		queryKey: ["publishers"],
+		queryFn: async () => {
 			try {
 				const response = await axiosInstance.get("/publishers");
-				const publisherOptions = response.data.map((publisher) => ({
+				return response.data.map((publisher) => ({
 					value: publisher._id,
 					label: publisher.publisherName,
 				}));
-				setPublishers(publisherOptions); // Update publishers state
 			} catch (error) {
 				console.error("Error fetching publishers", error);
 				setError("Failed to load publishers");
 				toast.error("Failed to load publishers.");
+				return [];
 			}
-		};
+		},
+	});
 
-		fetchPublishers(); // Call function to fetch publishers
-	}, [axiosInstance]);
-
-	// Handle image upload via ImgBB
+	// Handle image upload
 	const handleUploadImage = async (e) => {
-		const image = e.target.files[0]; // Get the selected image
-		const formData = new FormData();
-		formData.append("image", image); // Append image to formData
+		const image = e.target.files[0];
+		if (!image) return;
 
-		const imageUploadUrl = `https://api.imgbb.com/1/upload?key=${
-			import.meta.env.VITE_image_upload_key
-		}`;
+		const formData = new FormData();
+		formData.append("image", image);
 
 		try {
-			const res = await axiosInstance.post(imageUploadUrl, formData, {
-				headers: { "Content-Type": "multipart/form-data" },
-			});
-			setImageUrl(res.data.data.url); 
-		
+			const res = await axiosInstance.post(
+				`https://api.imgbb.com/1/upload?key=${
+					import.meta.env.VITE_image_upload_key
+				}`,
+				formData,
+				{
+					headers: { "Content-Type": "multipart/form-data" },
+				}
+			);
+			setImageUrl(res.data.data.url);
+			toast.success("Image uploaded successfully!");
 		} catch (error) {
 			console.error("Error uploading image:", error);
 			toast.error("Failed to upload image.");
@@ -63,79 +102,112 @@ const AddArticle = () => {
 
 	// Handle form submission
 	const onSubmit = async (data) => {
-		const { title, publisher, tags, description } = data;
+		// Frontend validation (redundant check for better UX)
+		if (userStatus.hasArticle && !userStatus.isPremium) {
+			toast.error(
+				"Normal users can only publish one article. Upgrade to premium to publish more."
+			);
+			return;
+		}
 
 		if (!imageUrl) {
 			toast.error("Please upload an image for the article.");
 			return;
 		}
+
 		const selectedPublisher = publishers.find(
-			(pub) => pub.value === publisher.value
+			(pub) => pub.value === data.publisher.value
 		);
-		const publisherName = selectedPublisher ? selectedPublisher.label : "";
+
+		const articleData = {
+			authorName: user.displayName,
+			authorImage: user.photoURL,
+			authorEmail: user.email,
+			publisher: selectedPublisher?.label || "",
+			title: data.title,
+			publisherId: data.publisher.value,
+			imageUrl,
+			tags: data.tags.map((tag) => tag.value),
+			description: data.description,
+			status: "pending",
+			createdAt: new Date().toISOString(),
+		};
+
 		try {
-			const articleData = {
-				authorName: user.displayName,
-				authorImage: user.photoURL,
-				authorEmail: user.email,
-				publisher: publisherName,
-
-				title,
-				publisherId: publisher.value,
-				imageUrl,
-				tags: tags.map((tag) => tag.value),
-				description,
-				status: "pending", 
-				createdAt: new Date().toISOString(),
-			};
-		
-			
-			console.log("Article Data:", articleData);
-			
-			
-
-			const response = await axiosInstance.post("/articles", articleData);
-
-			
-			console.log("Article Response:", response);
-
+			const response = await axiosSecure.post("/articles", articleData);
 			if (response.status === 201) {
 				toast.success(
 					"Article submitted successfully! Awaiting admin approval."
 				);
 				setImageUrl("");
-				document.getElementById("articleForm").reset(); 
-			} else {
-				
-				toast.error("Failed to submit article.");
+				reset();
+				// Note: In a real app, you might want to invalidate the userStatus query here
 			}
 		} catch (error) {
 			console.error("Error submitting article:", error);
-			toast.error("Failed to submit article.");
+			if (error.response?.data?.message) {
+				toast.error(error.response.data.message);
+			} else {
+				toast.error("Failed to submit article.");
+			}
 		}
-		
-		};
-	  
+	};
 
+	// Show upgrade message if normal user already has an article
+	if (userStatus.hasArticle && !userStatus.isPremium) {
+		return (
+			<div className="p-8 bg-stone-200 rounded-lg shadow-lg max-w-3xl mx-auto mt-10 mb-10">
+				<h1 className="text-3xl font-bold mb-6 text-gray-800">Add Article</h1>
+				<div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+					<p className="font-bold">Article Limit Reached</p>
+					<p>
+						You've already submitted one article. Upgrade to premium to submit
+						unlimited articles.
+					</p>
+				</div>
+				<button
+					onClick={() => (window.location.href = "/subscription")}
+					className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+				>
+					Upgrade to Premium
+				</button>
+			</div>
+		);
+	}
 
 	return (
 		<div className="p-8 bg-stone-200 rounded-lg shadow-lg max-w-3xl mx-auto mt-10 mb-10">
 			<h1 className="text-3xl font-bold mb-6 text-gray-800">Add Article</h1>
-			{error && <p className="text-red-500 mb-4">{error}</p>}{" "}
-			{/* Show error if publishers failed to load */}
+			{error && <p className="text-red-500 mb-4">{error}</p>}
+
+			{userStatus.isPremium && (
+				<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4">
+					<p className="font-bold">Premium User Benefits</p>
+					<p>
+						You can publish unlimited articles with your premium subscription.
+					</p>
+				</div>
+			)}
+
 			<form
 				id="articleForm"
 				onSubmit={handleSubmit(onSubmit)}
 				className="space-y-6"
 			>
-				{/* Title */}
+				{/* Title field */}
 				<div>
 					<label className="block text-sm text-gray-700 mb-1">
-						Article Title
+						Article Title *
 					</label>
 					<input
 						type="text"
-						{...register("title", { required: "Title is required" })}
+						{...register("title", {
+							required: "Title is required",
+							minLength: {
+								value: 5,
+								message: "Title must be at least 5 characters",
+							},
+						})}
 						className="w-full px-4 py-2 border border-gray-300 rounded-md"
 						placeholder="Enter article title"
 					/>
@@ -144,9 +216,11 @@ const AddArticle = () => {
 					)}
 				</div>
 
-				{/* Publisher Dropdown */}
+				{/* Publisher dropdown */}
 				<div>
-					<label className="block text-sm text-gray-700 mb-1">Publisher</label>
+					<label className="block text-sm text-gray-700 mb-1">
+						Publisher *
+					</label>
 					<Controller
 						name="publisher"
 						control={control}
@@ -154,10 +228,11 @@ const AddArticle = () => {
 						render={({ field }) => (
 							<Select
 								{...field}
-								options={publishers} // Options passed from the state
-								getOptionLabel={(e) => e.label} // Display the publisher name
-								getOptionValue={(e) => e.value} // Set the publisher ID as the value
+								options={publishers}
 								placeholder="Select Publisher"
+								className="basic-multi-select"
+								classNamePrefix="select"
+								isLoading={!publishers.length}
 							/>
 						)}
 					/>
@@ -168,13 +243,17 @@ const AddArticle = () => {
 					)}
 				</div>
 
-				{/* Tags (react-select multi select) */}
+				{/* Tags multi-select */}
 				<div>
-					<label className="block text-sm text-gray-700 mb-1">Tags</label>
+					<label className="block text-sm text-gray-700 mb-1">Tags *</label>
 					<Controller
 						name="tags"
-						control={control} // Pass control to the Controller
-						rules={{ required: "At least one tag is required" }}
+						control={control}
+						rules={{
+							required: "At least one tag is required",
+							validate: (value) =>
+								value.length > 0 || "Select at least one tag",
+						}}
 						render={({ field }) => (
 							<Select
 								{...field}
@@ -185,6 +264,9 @@ const AddArticle = () => {
 									{ value: "business", label: "Business" },
 									{ value: "education", label: "Education" },
 								]}
+								placeholder="Select tags"
+								className="basic-multi-select"
+								classNamePrefix="select"
 							/>
 						)}
 					/>
@@ -196,14 +278,19 @@ const AddArticle = () => {
 				{/* Description */}
 				<div>
 					<label className="block text-sm text-gray-700 mb-1">
-						Description
+						Description *
 					</label>
 					<textarea
 						{...register("description", {
 							required: "Description is required",
+							minLength: {
+								value: 50,
+								message: "Description must be at least 50 characters",
+							},
 						})}
 						className="w-full px-4 py-2 border border-gray-300 rounded-md"
 						placeholder="Enter article description"
+						rows="5"
 					></textarea>
 					{errors.description && (
 						<p className="text-red-500 text-xs mt-1">
@@ -215,21 +302,35 @@ const AddArticle = () => {
 				{/* Image Upload */}
 				<div>
 					<label className="block text-sm text-gray-700 mb-1">
-						Upload Image
+						Article Image *
 					</label>
 					<input
 						type="file"
 						accept="image/*"
 						onChange={handleUploadImage}
 						className="w-full px-4 py-2 file:bg-gray-100 file:border-none file:rounded file:px-3 file:py-1 file:cursor-pointer"
+						required
 					/>
+					{imageUrl && (
+						<div className="mt-2">
+							<img
+								src={imageUrl}
+								alt="Preview"
+								className="h-40 object-cover rounded"
+							/>
+							<p className="text-green-600 text-sm mt-1">
+								Image uploaded successfully!
+							</p>
+						</div>
+					)}
 				</div>
 
 				{/* Submit Button */}
 				<div className="flex justify-end">
 					<button
 						type="submit"
-						className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+						className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
+						disabled={!imageUrl}
 					>
 						Submit Article
 					</button>

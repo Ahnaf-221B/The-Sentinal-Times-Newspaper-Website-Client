@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../../Context/AuthContext"; // Accessing the AuthContext to get current user
 import useAxios from "../../hooks/useAxios";
 import { updateProfile } from "firebase/auth"; // Firebase method to update profile
+import Swal from "sweetalert2"; // Import SweetAlert2 for better user notifications
 
 const MyProfile = () => {
 	const { user, updateUserProfile } = useContext(AuthContext); // Get current user and update function from AuthContext
@@ -14,13 +15,17 @@ const MyProfile = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 
-	const axiosInstance = useAxios();
+	
 
 	useEffect(() => {
 		if (!user) {
-			// Redirect or handle if the user is not logged in
-			// Optionally, you can redirect to login page
-			alert("Please login to view and update your profile");
+			// Use SweetAlert2 instead of alert for better UX
+			Swal.fire({
+				title: "Authentication Required",
+				text: "Please login to view and update your profile",
+				icon: "warning",
+				confirmButtonColor: "#3085d6"
+			});
 		}
 	}, [user]);
 
@@ -30,19 +35,47 @@ const MyProfile = () => {
 	};
 
 	const handleProfileUpdate = async () => {
-		setLoading(true);
-		setError(null);
+		// Show confirmation dialog before updating profile
+		Swal.fire({
+			title: "Update Profile",
+			text: "Are you sure you want to update your profile?",
+			icon: "question",
+			showCancelButton: true,
+			confirmButtonColor: "#3085d6",
+			cancelButtonColor: "#d33",
+			confirmButtonText: "Yes, update it!"
+		}).then(async (result) => {
+			if (result.isConfirmed) {
+				setLoading(true);
+				setError(null);
 
-		try {
-			// Use the updateUserProfile from AuthContext to update the user's profile
-			await updateUserProfile(profileData);
-			alert("Profile updated successfully!");
-		} catch (error) {
-			setError("Failed to update profile.");
-			console.error("Error updating profile:", error);
-		} finally {
-			setLoading(false);
-		}
+				try {
+					// Use the updateUserProfile from AuthContext to update the user's profile
+					await updateUserProfile(profileData);
+					
+					// Show success message with SweetAlert2
+					Swal.fire({
+						title: "Success!",
+						text: "Your profile has been updated successfully.",
+						icon: "success",
+						confirmButtonColor: "#3085d6"
+					});
+				} catch (error) {
+					setError("Failed to update profile.");
+					console.error("Error updating profile:", error);
+					
+					// Show error message with SweetAlert2
+					Swal.fire({
+						title: "Error!",
+						text: "Failed to update your profile. Please try again.",
+						icon: "error",
+						confirmButtonColor: "#3085d6"
+					});
+				} finally {
+					setLoading(false);
+				}
+			}
+		})
 	};
 
 	return (

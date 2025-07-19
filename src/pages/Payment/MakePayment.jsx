@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import useAxios from "../../hooks/useAxios";
 import { AuthContext } from "../../Context/AuthContext";
 import Swal from "sweetalert2"; // Import SweetAlert2
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 
 const MakePayment = () => {
 	const stripe = useStripe();
@@ -16,6 +17,7 @@ const MakePayment = () => {
 	const subscriptionPeriod = location.state?.subscriptionPeriod || "1min";
 	const amount = location.state?.amount || 99;
 	const axiosInstance = useAxios();
+	const axiosSecure = useAxiosSecure();
 	const { updatePremiumStatus } = useContext(AuthContext);
 
 	// After successful subscription
@@ -78,7 +80,7 @@ const MakePayment = () => {
 				});
 			} else if (result.paymentIntent.status === "succeeded") {
 				// Update premium status with the calculated expiration date
-				await axiosInstance.put(`/users/${user.email}/update-premium`, {
+				await axiosSecure.put(`/users/${user.email}/update-premium`, {
 					premiumTaken: expirationDate.toISOString(),
 					subscriptionPeriod,
 				});
