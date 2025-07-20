@@ -3,7 +3,8 @@ import React, { use } from "react";
 import { AuthContext } from "../Context/AuthContext";
 
 const axiosSecure = axios.create({
-	baseURL: `http://localhost:3000`,
+	baseURL: `https://newspaper-website-server-beige.vercel.app
+`,
 });
 
 const useAxiosSecure = () => {

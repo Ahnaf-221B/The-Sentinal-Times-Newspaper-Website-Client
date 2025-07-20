@@ -1,36 +1,37 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import axios from "axios"; // We will use axios for making HTTP requests
 import useAxios from "../../../hooks/useAxios";
 
 const AddPublisher = () => {
 	const [publisherName, setPublisherName] = useState("");
 	const [logoFile, setLogoFile] = useState(null);
-    const axiosInstance = useAxios()
-	// Handle file upload to ImgBB
-	const handleUploadImage = async (e) => {
-		const image = e.target.files[0]; // Get the selected image file
-		const formData = new FormData();
-		formData.append("image", image); // Append the image to formData
+	const [isLoading, setIsLoading] = useState(false);
+	const axiosInstance = useAxios();
 
-		// ImgBB API URL
+	const handleUploadImage = async (e) => {
+		const image = e.target.files[0];
+		const formData = new FormData();
+		formData.append("image", image);
+
 		const imageUploadUrl = `https://api.imgbb.com/1/upload?key=${
 			import.meta.env.VITE_image_upload_key
 		}`;
 
+		setIsLoading(true);
+
 		try {
-			// Upload the image to ImgBB
 			const res = await axiosInstance.post(imageUploadUrl, formData, {
 				headers: {
-					"Content-Type": "multipart/form-data", // Make sure we set this header for file uploads
+					"Content-Type": "multipart/form-data",
 				},
 			});
 
-			// If successful, set the image URL
-			setLogoFile(res.data.data.url); // ImgBB returns the image URL
+			setLogoFile(res.data.data.url);
+			setIsLoading(false);
 		} catch (error) {
 			console.error("Error uploading image:", error);
 			toast.error("Failed to upload image.");
+			setIsLoading(false);
 		}
 	};
 
@@ -38,29 +39,31 @@ const AddPublisher = () => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 
+		
 		if (!publisherName || !logoFile) {
 			toast.error("Please provide both publisher name and logo.");
 			console.log("Missing data:", { publisherName, logoFile });
 			return;
 		}
+
+		setIsLoading(true); 
+
 		try {
-			
-			const response = await axiosInstance.post(
-				"/publishers",
-				{
-					publisherName,
-					logoUrl: logoFile,
-				}
-			);
+			const response = await axiosInstance.post("/publishers", {
+				publisherName,
+				logoUrl: logoFile,
+			});
 
 			if (response.status === 201) {
 				toast.success("Publisher added successfully!");
 				setPublisherName("");
-				setLogoFile(null); 
+				setLogoFile(null);
 			}
 		} catch (error) {
 			toast.error("Failed to add publisher.");
 			console.error("Error adding publisher:", error);
+		} finally {
+			setIsLoading(false); // Reset loading once the form submission is completed
 		}
 	};
 
@@ -106,9 +109,11 @@ const AddPublisher = () => {
 				{/* Submit Button */}
 				<button
 					type="submit"
+					disabled={isLoading} // Disable button when loading
 					className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 				>
-					Add Publisher
+					{isLoading ? "Adding..." : "Add Publisher"}{" "}
+					{/* Show different text based on loading state */}
 				</button>
 			</form>
 		</div>

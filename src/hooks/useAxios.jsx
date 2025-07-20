@@ -2,7 +2,8 @@ import axios from "axios";
 import React from "react";
 
 const axiosInstance = axios.create({
-	baseURL: `http://localhost:3000`,
+	baseURL: `https://newspaper-website-server-beige.vercel.app
+`,
 });
 
 const useAxios = () => {

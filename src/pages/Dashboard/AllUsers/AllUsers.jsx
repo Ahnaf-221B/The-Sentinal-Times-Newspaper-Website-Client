@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import useAxios from "../../../hooks/useAxios"; // Assuming this path is correct for your useAxios hook
-
+import useAxiosSecure from "../../../hooks/useAxiosSecure"; // Assuming this path is correct for your useAxios hook
 const AllUsers = () => {
 	const [users, setUsers] = useState([]); // Users data
 	const [loading, setLoading] = useState(true); // Loading state
@@ -10,13 +10,14 @@ const AllUsers = () => {
 	const [totalPages, setTotalPages] = useState(1); // Total pages for pagination
 	const [itemsPerPage] = useState(10); // Number of items per page
 	const axiosInstance = useAxios(); // Axios instance
+	const axiosSecure =  useAxiosSecure(); // Axios instance with secure headers
 
 	// Function to fetch all users from the backend with pagination
 	const fetchUsers = async (page) => {
 		setLoading(true);
 		setError(null);
 		try {
-			const response = await axiosInstance.get("/users", {
+			const response = await axiosSecure.get("/users", {
 				params: { page, limit: itemsPerPage },
 			});
 
@@ -44,7 +45,8 @@ const AllUsers = () => {
 	// Function to handle making a user an admin
 	const handleMakeAdmin = async (userId) => {
 		try {
-			const response = await axiosInstance.patch(`/users/${userId}/make-admin`);
+			const response = await axiosSecure.patch(`/users/${userId}/make-admin`);
+
 			if (response.status === 200) {
 				toast.success("User is now an admin!");
 				setUsers((prevUsers) =>

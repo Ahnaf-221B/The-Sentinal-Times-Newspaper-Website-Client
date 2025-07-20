@@ -1,78 +1,65 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import useAxios from "../../../hooks/useAxios";
+import { useQuery } from "@tanstack/react-query";
 
 const AllArticle = () => {
-	const [articles, setArticles] = useState([]); // Ensure articles is always an array
 	const [showModal, setShowModal] = useState(false);
 	const [currentArticleId, setCurrentArticleId] = useState(null);
 	const [declineReason, setDeclineReason] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
-	const [totalPages, setTotalPages] = useState(1);
 	const axiosInstance = useAxios(); // Axios instance
 
-	// Fetch articles for the current page
-	useEffect(() => {
-		axiosInstance
-			.get(`/articles?page=${currentPage}`)
-			.then((response) => {
-				if (response.data && Array.isArray(response.data.articles)) {
-					setArticles(response.data.articles);
-					setTotalPages(response.data.totalPages); // Assuming the API returns the total pages
-				} else {
-					setArticles([]); // Fallback to empty array if response is invalid
-				}
-			})
-			.catch((error) => {
-				console.error("Error fetching articles:", error);
-				setArticles([]); // Fallback to empty array on error
-			});
-	}, [currentPage]);
+	// Fetch articles using React Query
+	const { data, isLoading, isError, refetch } = useQuery({
+		queryKey: ['articles', currentPage],
+		queryFn: async () => {
+			const response = await axiosInstance.get(`/articles?page=${currentPage}`);
+			return response.data;
+		},
+		staleTime: 60000, // 1 minute
+		retryOnError: true,
+		retryDelay: 3000, // 3 seconds
+	});
+
+	// Extract articles and totalPages from the query data
+	const articles = data?.articles || [];
+	const totalPages = data?.totalPages || 1;
 
 	// Approve Article
-	const approveArticle = (id) => {
-		axiosInstance
-			.put(`/articles/${id}/approve`)
-			.then((response) => {
-				setArticles(
-					articles.map((article) =>
-						article._id === id ? response.data : article
-					)
-				);
-			})
-			.catch((error) => console.error("Error approving article:", error));
+	const approveArticle = async (id) => {
+		try {
+			await axiosInstance.put(`/articles/${id}/approve`);
+			// Refetch articles to update the list
+			refetch();
+		} catch (error) {
+			console.error("Error approving article:", error);
+		}
 	};
 
 	// Decline Article
-	const declineArticle = () => {
-		axiosInstance
-			.put(`/articles/${currentArticleId}/decline`, { reason: declineReason })
-			.then((response) => {
-				setArticles(
-					articles.map((article) =>
-						article._id === currentArticleId ? response.data : article
-					)
-				);
-				setShowModal(false);
-				setDeclineReason("");
-			})
-			.catch((error) => console.error("Error declining article:", error));
+	const declineArticle = async () => {
+		try {
+			await axiosInstance.put(`/articles/${currentArticleId}/decline`, { reason: declineReason });
+			// Refetch articles to update the list
+			refetch();
+			setShowModal(false);
+			setDeclineReason("");
+		} catch (error) {
+			console.error("Error declining article:", error);
+		}
 	};
 
 	// Make Article Premium
-	const makePremiumArticle = (id) => {
-		axiosInstance
-			.put(`/articles/${id}/make-premium`)
-			.then((response) => {
-				// Update the local articles list to reflect the premium status change
-				setArticles(
-					articles.map((article) =>
-						article._id === id ? { ...article, isPremium: true } : article
-					)
-				);
-				// Redirect to Premium Articles page
-				window.location.href = "/premium-article"; // Navigate to the Premium Articles page
-			})
-			.catch((error) => console.error("Error making article premium:", error));
+	const makePremiumArticle = async (id) => {
+		try {
+			await axiosInstance.put(`/articles/${id}/make-premium`);
+			// Refetch articles to update the list
+			refetch();
+			// Redirect to Premium Articles page
+			window.location.href = "/premium-article"; // Navigate to the Premium Articles page
+		} catch (error) {
+			console.error("Error making article premium:", error);
+		}
 	};
 
 	// Open Decline Modal
@@ -92,7 +79,15 @@ const AllArticle = () => {
 			<h1 className="text-4xl font-semibold text-center mb-8">All Articles</h1>
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-1 gap-6">
-				{articles.length === 0 ? (
+				{isLoading ? (
+					<div className="text-center col-span-full text-xl text-gray-500">
+						Loading articles...
+					</div>
+				) : isError ? (
+					<div className="text-center col-span-full text-xl text-red-500">
+						Error loading articles. Please try again.
+					</div>
+				) : articles.length === 0 ? (
 					<div className="text-center col-span-full text-xl text-gray-500">
 						No articles available.
 					</div>
