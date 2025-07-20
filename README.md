@@ -1,12 +1,36 @@
-# React + Vite
+# The Sentinal Times
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**The Sentinal Times** is a dynamic online newspaper platform that delivers the latest news, trending articles, and premium content to readers worldwide. Designed for seamless user experience, it offers robust features for admins, publishers, and readers alike.
 
-Currently, two official plugins are available:
+## Admin Credentials
+- **Username:** abc@gmail.com
+- **Password:** Abc123
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Live Site
+- [https://thesentinaltimes.web.app](https://thesentinaltimes.web.app)
 
-## Expanding the ESLint configuration
+## Key Features
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- 📰 **Latest News & Trending Articles:** Stay updated with the most recent and trending news stories.
+- 🔒 **Role-Based Authentication:** Secure login and registration with role-based access for Admin, Publisher, and User.
+- 🏆 **Premium Articles:** Exclusive content for premium subscribers.
+- 💳 **Online Payment Integration:** Subscribe to premium plans with secure online payments.
+- 📊 **Statistics Dashboard:** Visualize site and user statistics with interactive charts.
+- 🗣️ **View Trend Analysis:** Discover trending topics using view-based analytics.
+- ✅ **Fact Check:** Built-in fact-checking tool to verify news authenticity.
+- 🏢 **Publisher Management:** Admins can add, manage, and review publishers.
+- ✍️ **Article Submission:** Publishers and users can submit and manage their own articles.
+- 👤 **User Profile Management:** Update personal information and view subscription status.
+- 🚫 **Access Control:** Unauthorized users are redirected to a forbidden page.
+- 📱 **Responsive Design:** Optimized for all devices – desktop, tablet, and mobile.
+- 🔥 **Real-Time Updates:** News and statistics update in real-time for the best user experience.
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Start the development server with `npm run dev`
+
+---
+
+For more information, visit the [live site](https://thesentinaltimes.web.app).

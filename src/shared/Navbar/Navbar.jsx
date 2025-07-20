@@ -89,7 +89,7 @@ const Navbar = () => {
 	};
 
 	return (
-		<nav className="bg-stone-200 shadow-lg noticia">
+		<nav className="bg-stone-200 shadow-lg noticia sticky z-50 top-0">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6">
 				<div className="flex justify-between h-16 items-center">
 					{/* Logo */}

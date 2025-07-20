@@ -27,7 +27,7 @@ const TrendingArticles = () => {
 	}, []);
 
 	return (
-		<div className="container mx-auto p-6 bg-stone-100 rounded-lg shadow-lg">
+		<div className="container mx-auto p-6 bg-stone-300 rounded-lg shadow-lg">
 			<h2 className="text-3xl font-semibold text-center mb-8 text-black mask-t-from-12">
 				Trending Articles
 			</h2>
