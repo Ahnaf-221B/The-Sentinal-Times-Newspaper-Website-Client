@@ -36,7 +36,7 @@ const Home = () => {
 			<VoiceTrend />
 
 			{/* Modal for subscription */}
-			{/* {showModal && (
+			{showModal && (
 				<div className="fixed inset-0 flex justify-center items-center backdrop-blur-sm z-50">
 					<div className="bg-white p-8 rounded-lg shadow-lg w-96">
 						<h2 className="text-2xl font-semibold text-center mb-4">
@@ -54,7 +54,7 @@ const Home = () => {
 						</button>
 					</div>
 				</div>
-			)} */}
+			)}
 		</div>
 	);
 };
