@@ -21,9 +21,7 @@ const Home = () => {
 		return () => clearTimeout(timer); // Cleanup timeout if the component unmounts
 	}, []);
 
-	const handleNavigateToSubscription = () => {
-		navigate("/subscription"); // Navigate to the subscription page
-	};
+	
 
 	return (
 		<div className="bg-stone-100">
@@ -35,26 +33,7 @@ const Home = () => {
 			<FactCheck />
 			<VoiceTrend />
 
-			{/* Modal for subscription */}
-			{showModal && (
-				<div className="fixed inset-0 flex justify-center items-center backdrop-blur-sm z-50">
-					<div className="bg-white p-8 rounded-lg shadow-lg w-96">
-						<h2 className="text-2xl font-semibold text-center mb-4">
-							Exclusive Offer
-						</h2>
-						<p className="text-gray-600 mb-4">
-							Take your experience to the next level with our premium
-							subscription!
-						</p>
-						<button
-							onClick={handleNavigateToSubscription}
-							className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-						>
-							Subscribe Now
-						</button>
-					</div>
-				</div>
-			)}
+			
 		</div>
 	);
 };

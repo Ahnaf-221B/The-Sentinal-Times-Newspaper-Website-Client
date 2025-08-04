@@ -39,7 +39,7 @@ const TrendingArticles = () => {
 				showStatus={false} // Hide the status (e.g., slide count)
 				autoPlay={true} // Enable auto play
 				interval={3000} // Set auto play interval in milliseconds
-				transitionTime={300} // Transition time for slides
+				transitionTime={500} // Transition time for slides
 				swipeable={true} // Enable swipe for touch devices
 				dynamicHeight={true} // Adjust height dynamically based on content
 			>
