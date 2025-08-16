@@ -5,11 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthContext } from "../../Context/AuthContext";
 import useAxios from "../../hooks/useAxios";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
+import { FaSortAlphaDown, FaSortAlphaUp } from "react-icons/fa";
 
 const UserAllArticle = () => {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [publisherFilter, setPublisherFilter] = useState(null);
 	const [tagsFilter, setTagsFilter] = useState(null);
+	const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
 	const { user } = useContext(AuthContext);
 	const axiosInstance = useAxios();
 	const axiosSecure = useAxiosSecure();
@@ -70,6 +72,20 @@ const UserAllArticle = () => {
 		window.location.href = `/article-details/${articleId}`;
 	};
 
+	// Toggle sort order function
+	const toggleSortOrder = () => {
+		setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+	};
+
+	// Sort articles based on title
+	const sortedArticles = [...articles].sort((a, b) => {
+		if (sortOrder === "asc") {
+			return a.title.localeCompare(b.title);
+		} else {
+			return b.title.localeCompare(a.title);
+		}
+	});
+
 	if (isPublishersLoading || isArticlesLoading) {
 		return <div>Loading...</div>;
 	}
@@ -82,15 +98,18 @@ const UserAllArticle = () => {
 		<div className="container mx-auto p-6 bg-stone-200 ">
 			<h1 className="text-4xl font-semibold text-center mb-8">All Articles</h1>
 
-			<div className="mb-6 max-w-7xl mx-auto flex gap-10">
-				<input
-					type="text"
-					value={searchTerm}
-					onChange={handleSearch}
-					className="w-full px-4 py-2 border border-gray-300 rounded-md bg-stone-100"
-					placeholder="Search articles by title or description..."
-				/>
-				<div className="w-1/4">
+			<div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-6 max-w-7xl mx-auto gap-4">
+				<div className="flex-1">
+					<input
+						type="text"
+						value={searchTerm}
+						onChange={handleSearch}
+						className="w-full px-4 py-2 border border-gray-300 rounded-md bg-stone-100"
+						placeholder="Search articles by title or description..."
+					/>
+				</div>
+
+				<div className="w-full sm:w-64">
 					<Select
 						placeholder="Select Publisher"
 						options={publishers}
@@ -98,11 +117,23 @@ const UserAllArticle = () => {
 						isLoading={isPublishersLoading}
 					/>
 				</div>
+
+				<button
+					onClick={toggleSortOrder}
+					className="w-full sm:w-auto flex items-center  gap-2 border-gray-300 text-stone-500 bg-white py-2 px-4 rounded-lg"
+
+
+				>
+					Sort by Title
+					{sortOrder === "asc" ? <FaSortAlphaDown /> : <FaSortAlphaUp />}
+				</button>
 			</div>
 
+			{/* Sort button */}
+
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-14 max-w-7xl mx-auto mb-10 ">
-				{articles.length > 0 ? (
-					articles.map((article) => (
+				{sortedArticles.length > 0 ? (
+					sortedArticles.map((article) => (
 						<div
 							key={article._id}
 							className={`bg-stone-100 p-4 rounded-lg shadow-lg hover:shadow-xl ${

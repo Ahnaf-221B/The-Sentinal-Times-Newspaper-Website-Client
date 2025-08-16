@@ -64,6 +64,14 @@ const Navbar = () => {
 
 	// Navigation items with their corresponding routes
 	const getNavItems = () => {
+
+		if (!user) {
+			return [
+				{ name: "Home", path: "/" },
+				{ name: "All Articles", path: "/all-articles" },
+				{ name: "Subscription", path: "/subscription" },
+			];
+		}
 		const items = [
 			{ name: "Home", path: "/" },
 			{ name: "Add Article", path: "/add-article" },
